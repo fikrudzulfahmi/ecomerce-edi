@@ -25,6 +25,7 @@ class AuthTest extends TestCase
         ]);
 
         $response->assertCreated()
+            ->assertJsonPath('data.role', 'customer')
             ->assertJsonStructure(['data' => ['id', 'name', 'email', 'role'], 'token']);
 
         $this->assertDatabaseHas('users', [

@@ -1,23 +1,32 @@
-import { Container } from './components/layout/Container'
-import { Footer } from './components/layout/Footer'
-import { Navbar } from './components/layout/Navbar'
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { Layout } from './components/layout/Layout'
+import { ProtectedRoute } from './routes/ProtectedRoute'
+import { Home } from './pages/Home'
+import { Login } from './pages/Login'
+import { Register } from './pages/Register'
+import { VerifyEmail } from './pages/VerifyEmail'
+import { ForgotPassword } from './pages/ForgotPassword'
+import { ResetPassword } from './pages/ResetPassword'
 
 function App() {
   return (
-    <div className="flex min-h-screen flex-col">
-      <Navbar />
-      <main className="flex-1">
-        <Container className="py-16 text-center">
-          <h1 className="text-4xl font-bold">
-            Selamat datang di Edi&rsquo;s Journal Store
-          </h1>
-          <p className="mt-4 text-ink-muted">
-            Tempat terbaik untuk buku, alat tulis, dan merchandise.
-          </p>
-        </Container>
-      </main>
-      <Footer />
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route element={<Layout />}>
+          <Route path="/" element={<Home />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/verify-email" element={<VerifyEmail />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+
+          {/* Halaman khusus pengguna login (keranjang, checkout, pesanan) — fase berikutnya. */}
+          <Route element={<ProtectedRoute />}>{/* diisi Fase 5 */}</Route>
+
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Route>
+      </Routes>
+    </BrowserRouter>
   )
 }
 

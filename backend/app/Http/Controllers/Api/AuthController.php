@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\Role;
 use App\Http\Requests\Auth\ForgotPasswordRequest;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
@@ -25,6 +26,7 @@ class AuthController
             'email' => $request->validated('email'),
             'phone' => $request->validated('phone'),
             'password' => Hash::make($request->validated('password')),
+            'role' => Role::Customer->value,
         ]);
 
         $user->sendEmailVerificationNotification();
