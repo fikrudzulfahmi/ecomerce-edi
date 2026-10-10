@@ -1,0 +1,32 @@
+# dependensi
+vendor/
+node_modules/
+
+# environment & secret
+.env
+.env.*
+!.env.example
+
+# Laravel runtime
+storage/logs/*
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/views/*
+bootstrap/cache/*
+storage/*.key
+
+# build frontend
+dist/
+.vite/
+coverage/
+
+# test/cache tools
+.phpunit.result.cache
+phpunit.xml
+*.log
+
+# OS/IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
