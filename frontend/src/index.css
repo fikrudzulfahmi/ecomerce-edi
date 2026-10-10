@@ -1,0 +1,38 @@
+@import 'tailwindcss';
+
+@theme {
+  /* Fonts */
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-serif: 'Merriweather', Georgia, serif;
+
+  /* Brand — Cozy & Trustworthy */
+  --color-cream: #f8f6f2;
+  --color-cream-dark: #f1eee7;
+  --color-cream-darker: #e9e4da;
+
+  --color-navy: #1e3a8a;
+  --color-navy-dark: #172c6b;
+  --color-navy-light: #334b9e;
+
+  --color-orange: #f97316;
+  --color-orange-dark: #ea6a0a;
+  --color-orange-light: #fb923c;
+
+  --color-ink: #1f2937;
+  --color-ink-muted: #6b7280;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-cream font-sans text-ink antialiased;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  @apply font-serif text-navy;
+}

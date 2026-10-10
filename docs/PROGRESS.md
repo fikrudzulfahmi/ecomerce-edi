@@ -5,7 +5,7 @@
 ## Status fase
 
 - [x] **Fase 0** — Fondasi dokumen (PROGRESS, DECISIONS, API)
-- [ ] **Fase 1** — Setup proyek (backend Laravel 12 + frontend Vite React TS)
+- [x] **Fase 1** — Setup proyek (backend Laravel 12 + frontend Vite React TS)
 - [ ] **Fase 2** — Database & seed
 - [ ] **Fase 3** — Auth
 - [ ] **Fase 4** — Katalog
@@ -18,7 +18,7 @@
 
 ## Catatan terakhir
 
-- **Fase 0 selesai.** DB diputuskan: **MySQL 8** (lihat DECISIONS.md).
-- Repo terhubung ke `fikrudzulfahmi/ecomerce-edi` (branch `main`).
-- Dok Mengantar.id & GDC **belum ada** → `SHIPPING-MENGANTAR.md` & `PAYMENT-GDC.md` masih placeholder, diisi nanti.
-- **Menunggu konfirmasi sebelum Fase 1.**
+- **Fase 1 selesai.** Backend Laravel 12 + Sanctum (route `api/user`, `sanctum/csrf-cookie`).
+- Frontend Vite + React TS + Tailwind v4 (token brand `navy`/`orange`/`cream`, font Merriweather + Inter), axios client, layout dasar (Navbar/Footer/Container).
+- `PAYMENT_DRIVER=mock` & `SHIPPING_DRIVER=mock` sudah diset di `.env.example`.
+- **Menunggu konfirmasi sebelum Fase 2.**
