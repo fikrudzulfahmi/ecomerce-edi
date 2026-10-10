@@ -36,6 +36,14 @@ export function Navbar() {
           >
             Katalog
           </Link>
+          {user && (
+            <Link
+              to="/orders"
+              className="text-sm font-medium text-cream/80 transition hover:text-white"
+            >
+              Pesanan
+            </Link>
+          )}
         </nav>
 
         <div className="flex items-center gap-2">

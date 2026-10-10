@@ -5,7 +5,11 @@ import { Home } from './pages/Home'
 import { ProductList } from './pages/ProductList'
 import { ProductDetail } from './pages/ProductDetail'
 import { Cart } from './pages/Cart'
+import { Checkout } from './pages/Checkout'
+import { Payment } from './pages/Payment'
 import { Addresses } from './pages/Addresses'
+import { Orders } from './pages/Orders'
+import { OrderDetail } from './pages/OrderDetail'
 import { Login } from './pages/Login'
 import { Register } from './pages/Register'
 import { VerifyEmail } from './pages/VerifyEmail'
@@ -29,7 +33,11 @@ function App() {
           {/* Halaman khusus pengguna login */}
           <Route element={<ProtectedRoute />}>
             <Route path="/cart" element={<Cart />} />
+            <Route path="/checkout" element={<Checkout />} />
+            <Route path="/payment/:code" element={<Payment />} />
             <Route path="/addresses" element={<Addresses />} />
+            <Route path="/orders" element={<Orders />} />
+            <Route path="/orders/:code" element={<OrderDetail />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />

@@ -4,7 +4,6 @@ import { useCart, useRemoveCartItem, useUpdateCartItem } from '../api/hooks'
 import { formatRupiah } from '../lib/format'
 import { Container } from '../components/layout/Container'
 import { Skeleton } from '../components/ui/Skeleton'
-import { Button } from '../components/ui/Button'
 
 export function Cart() {
   const { data: cart, isLoading } = useCart()
@@ -137,12 +136,12 @@ export function Cart() {
               <span className="text-orange-dark">{formatRupiah(cart.subtotal)}</span>
             </div>
           </div>
-          <Button className="mt-4 w-full" disabled>
+          <Link
+            to="/checkout"
+            className="mt-4 inline-flex w-full items-center justify-center rounded-md bg-orange px-4 py-2 text-sm font-semibold text-navy-dark transition hover:bg-orange-dark"
+          >
             Lanjut ke Checkout
-          </Button>
-          <p className="mt-2 text-center text-xs text-ink-muted">
-            Checkout tersedia di fase berikutnya.
-          </p>
+          </Link>
         </aside>
       </div>
     </Container>

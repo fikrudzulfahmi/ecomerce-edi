@@ -8,6 +8,14 @@ import {
   updateAddress,
   type AddressInput,
 } from './address'
+import { checkout, fetchShippingOptions, type CheckoutInput } from './checkout'
+import {
+  cancelOrder,
+  fetchOrder,
+  fetchOrders,
+  mockFailOrder,
+  mockPayOrder,
+} from './orders'
 import { useAuthStore } from '../store/auth'
 
 export function useCategories() {
@@ -96,5 +104,66 @@ export function useDeleteAddress() {
   return useMutation({
     mutationFn: (id: number) => deleteAddress(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['addresses'] }),
+  })
+}
+
+export function useShippingOptions(enabled: boolean) {
+  return useQuery({
+    queryKey: ['shipping-options'],
+    queryFn: fetchShippingOptions,
+    enabled,
+  })
+}
+
+export function useCheckout() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (input: CheckoutInput) => checkout(input),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['cart'] })
+      queryClient.invalidateQueries({ queryKey: ['orders'] })
+    },
+  })
+}
+
+export function useOrders(page = 1) {
+  return useQuery({
+    queryKey: ['orders', page],
+    queryFn: () => fetchOrders(page),
+  })
+}
+
+export function useOrder(code: string) {
+  return useQuery({
+    queryKey: ['order', code],
+    queryFn: () => fetchOrder(code),
+    enabled: !!code,
+  })
+}
+
+export function useCancelOrder() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (code: string) => cancelOrder(code),
+    onSuccess: (order, code) => {
+      queryClient.setQueryData(['order', code], order)
+      queryClient.invalidateQueries({ queryKey: ['orders'] })
+    },
+  })
+}
+
+export function useMockPay() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (code: string) => mockPayOrder(code),
+    onSuccess: (order, code) => queryClient.setQueryData(['order', code], order),
+  })
+}
+
+export function useMockFail() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (code: string) => mockFailOrder(code),
+    onSuccess: (order, code) => queryClient.setQueryData(['order', code], order),
   })
 }

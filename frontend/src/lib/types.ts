@@ -80,3 +80,74 @@ export interface Address {
   detail: string
   is_default: boolean
 }
+
+export type OrderStatus =
+  | 'PENDING_PAYMENT'
+  | 'PAID'
+  | 'PROCESSING'
+  | 'SHIPPED'
+  | 'DELIVERED'
+  | 'CANCELLED'
+  | 'EXPIRED'
+  | 'COD_PENDING'
+  | 'COD_COMPLETED'
+  | 'COD_RETURNED'
+
+export type PaymentMethodType = 'gdc' | 'cod'
+
+export interface OrderAddress {
+  recipient: string
+  phone: string
+  province: string
+  city: string
+  district: string
+  postal_code: string
+  detail: string
+}
+
+export interface OrderItem {
+  id: number
+  name: string
+  price: number
+  qty: number
+  subtotal: number
+  product: Product | null
+}
+
+export interface OrderPayment {
+  provider: string
+  status: string
+  external_ref: string | null
+  paid_at: string | null
+}
+
+export interface OrderShipment {
+  courier: string | null
+  service: string | null
+  awb: string | null
+  status: string
+  cod_amount: number
+  tracking: unknown | null
+}
+
+export interface Order {
+  id: number
+  code: string
+  status: OrderStatus
+  subtotal: number
+  shipping_cost: number
+  total: number
+  payment_method: PaymentMethodType
+  address: OrderAddress
+  expires_at: string | null
+  created_at: string
+  items: OrderItem[]
+  payment: OrderPayment | null
+  shipment: OrderShipment | null
+}
+
+export interface ShippingOption {
+  courier: string
+  service: string
+  cost: number
+}

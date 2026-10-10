@@ -3,6 +3,10 @@
 namespace App\Providers;
 
 use App\Models\User;
+use App\Services\Payment\MockPaymentProvider;
+use App\Services\Payment\PaymentProviderInterface;
+use App\Services\Shipping\MockShippingProvider;
+use App\Services\Shipping\ShippingProviderInterface;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Support\ServiceProvider;
 
@@ -13,7 +17,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Fase 6: driver mock. Fase 7/8: ganti ke MengantarProvider/GdcPaymentProvider
+        // berdasarkan config('shipping.driver') / config('payment.driver').
+        $this->app->bind(PaymentProviderInterface::class, MockPaymentProvider::class);
+        $this->app->bind(ShippingProviderInterface::class, MockShippingProvider::class);
     }
 
     /**
