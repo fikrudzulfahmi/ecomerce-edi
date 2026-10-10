@@ -53,3 +53,30 @@ export interface Product {
   book_detail: BookDetail | null
   created_at: string
 }
+
+export interface CartItem {
+  id: number
+  product_id: number
+  qty: number
+  subtotal: number
+  product: Product
+}
+
+export interface Cart {
+  id: number
+  items: CartItem[]
+  subtotal: number
+  total_items: number
+}
+
+export interface Address {
+  id: number
+  recipient: string
+  phone: string
+  province: string
+  city: string
+  district: string
+  postal_code: string
+  detail: string
+  is_default: boolean
+}

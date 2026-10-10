@@ -4,6 +4,8 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useAuthStore } from '../store/auth'
+import { addCartItem } from '../api/cart'
+import { clearCartIntent, getCartIntent } from '../lib/intent'
 import { extractErrorMessage } from '../lib/errors'
 import { AuthCard } from '../components/layout/AuthCard'
 import { Alert } from '../components/ui/Alert'
@@ -33,6 +35,19 @@ export function Login() {
     setServerError(null)
     try {
       await login(values.email, values.password)
+
+      const intent = getCartIntent()
+      if (intent) {
+        clearCartIntent()
+        try {
+          await addCartItem(intent.productId, intent.qty)
+        } catch {
+          // abaikan — pengguna bisa menambah manual
+        }
+        navigate(intent.returnTo, { replace: true })
+        return
+      }
+
       const from = (location.state as { from?: { pathname: string } } | null)?.from?.pathname ?? '/'
       navigate(from, { replace: true })
     } catch (error) {

@@ -2,10 +2,12 @@ import { Link, useNavigate } from 'react-router-dom'
 import { BookOpen, LogOut, ShoppingCart } from 'lucide-react'
 import { Container } from './Container'
 import { useAuthStore } from '../../store/auth'
+import { useCart } from '../../api/hooks'
 
 export function Navbar() {
   const user = useAuthStore((s) => s.user)
   const logout = useAuthStore((s) => s.logout)
+  const { data: cart } = useCart()
   const navigate = useNavigate()
 
   const handleLogout = async () => {
@@ -38,11 +40,16 @@ export function Navbar() {
 
         <div className="flex items-center gap-2">
           <Link
-            to="/login"
+            to="/cart"
             className="relative rounded-md p-2 transition hover:bg-navy-light"
             aria-label="Keranjang"
           >
             <ShoppingCart className="h-5 w-5" />
+            {cart && cart.total_items > 0 && (
+              <span className="absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-orange px-1 text-xs font-bold text-navy-dark">
+                {cart.total_items}
+              </span>
+            )}
           </Link>
 
           {user ? (

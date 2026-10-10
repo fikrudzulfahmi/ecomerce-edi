@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Api\AddressController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\EmailVerificationController;
 use App\Http\Controllers\Api\ProductController;
@@ -28,5 +30,17 @@ Route::prefix('v1')->group(function (): void {
         Route::get('/me', [AuthController::class, 'me']);
         Route::post('/email/verification-notification', [EmailVerificationController::class, 'resend'])
             ->middleware('throttle:6,1');
+
+        // Keranjang
+        Route::get('/cart', [CartController::class, 'index']);
+        Route::post('/cart/items', [CartController::class, 'addItem']);
+        Route::patch('/cart/items/{item}', [CartController::class, 'updateItem']);
+        Route::delete('/cart/items/{item}', [CartController::class, 'removeItem']);
+
+        // Alamat
+        Route::get('/addresses', [AddressController::class, 'index']);
+        Route::post('/addresses', [AddressController::class, 'store']);
+        Route::patch('/addresses/{address}', [AddressController::class, 'update']);
+        Route::delete('/addresses/{address}', [AddressController::class, 'destroy']);
     });
 });

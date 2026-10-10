@@ -1,8 +1,9 @@
 import { Fragment, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { Minus, Plus, ShoppingCart } from 'lucide-react'
-import { useProduct } from '../api/hooks'
+import { useAddCartItem, useProduct } from '../api/hooks'
 import { formatRupiah } from '../lib/format'
+import { extractErrorMessage } from '../lib/errors'
 import { saveCartIntent } from '../lib/intent'
 import { useAuthStore } from '../store/auth'
 import { Container } from '../components/layout/Container'
@@ -16,6 +17,9 @@ export function ProductDetail() {
   const user = useAuthStore((s) => s.user)
   const navigate = useNavigate()
   const [qty, setQty] = useState(1)
+  const addItem = useAddCartItem()
+  const [addMessage, setAddMessage] = useState<string | null>(null)
+  const [addError, setAddError] = useState<string | null>(null)
 
   if (isLoading) {
     return (
@@ -55,13 +59,21 @@ export function ProductDetail() {
   if (bookDetail?.isbn) details.push(['ISBN', bookDetail.isbn])
   if (bookDetail?.language) details.push(['Bahasa', bookDetail.language])
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
+    setAddMessage(null)
+    setAddError(null)
+
     if (!user) {
       saveCartIntent({ productId: product.id, qty, returnTo: `/products/${product.slug}` })
       navigate('/login', { state: { from: { pathname: `/products/${product.slug}` } } })
-    } else {
-      // Fase 5: integrasi keranjang
-      navigate('/cart')
+      return
+    }
+
+    try {
+      await addItem.mutateAsync({ productId: product.id, qty })
+      setAddMessage('Berhasil ditambahkan ke keranjang.')
+    } catch (err) {
+      setAddError(extractErrorMessage(err))
     }
   }
 
@@ -153,6 +165,16 @@ export function ProductDetail() {
               Tambah ke Keranjang
             </Button>
           </div>
+
+          {addMessage && (
+            <div className="flex items-center gap-2 text-sm text-green-700">
+              <span>{addMessage}</span>
+              <Link to="/cart" className="font-semibold text-navy hover:underline">
+                Lihat keranjang
+              </Link>
+            </div>
+          )}
+          {addError && <p className="text-sm text-red-600">{addError}</p>}
         </div>
       </div>
 

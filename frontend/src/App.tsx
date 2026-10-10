@@ -4,6 +4,8 @@ import { ProtectedRoute } from './routes/ProtectedRoute'
 import { Home } from './pages/Home'
 import { ProductList } from './pages/ProductList'
 import { ProductDetail } from './pages/ProductDetail'
+import { Cart } from './pages/Cart'
+import { Addresses } from './pages/Addresses'
 import { Login } from './pages/Login'
 import { Register } from './pages/Register'
 import { VerifyEmail } from './pages/VerifyEmail'
@@ -24,8 +26,11 @@ function App() {
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
 
-          {/* Halaman khusus pengguna login (keranjang, checkout, pesanan) — fase berikutnya. */}
-          <Route element={<ProtectedRoute />}>{/* diisi Fase 5 */}</Route>
+          {/* Halaman khusus pengguna login */}
+          <Route element={<ProtectedRoute />}>
+            <Route path="/cart" element={<Cart />} />
+            <Route path="/addresses" element={<Addresses />} />
+          </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
