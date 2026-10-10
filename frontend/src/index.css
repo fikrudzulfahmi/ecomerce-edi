@@ -22,17 +22,19 @@
   --color-ink-muted: #6b7280;
 }
 
-html {
-  scroll-behavior: smooth;
-}
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
 
-body {
-  @apply bg-cream font-sans text-ink antialiased;
-}
+  body {
+    @apply bg-cream font-sans text-ink antialiased;
+  }
 
-h1,
-h2,
-h3,
-h4 {
-  @apply font-serif text-navy;
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-serif text-navy;
+  }
 }

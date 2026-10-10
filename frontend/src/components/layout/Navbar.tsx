@@ -28,6 +28,12 @@ export function Navbar() {
           >
             Beranda
           </Link>
+          <Link
+            to="/products"
+            className="text-sm font-medium text-cream/80 transition hover:text-white"
+          >
+            Katalog
+          </Link>
         </nav>
 
         <div className="flex items-center gap-2">
