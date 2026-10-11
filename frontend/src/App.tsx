@@ -1,6 +1,8 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { Layout } from './components/layout/Layout'
 import { ProtectedRoute } from './routes/ProtectedRoute'
+import { AdminGuard } from './routes/AdminGuard'
+import { AdminLayout } from './components/admin/AdminLayout'
 import { Home } from './pages/Home'
 import { ProductList } from './pages/ProductList'
 import { ProductDetail } from './pages/ProductDetail'
@@ -15,11 +17,16 @@ import { Register } from './pages/Register'
 import { VerifyEmail } from './pages/VerifyEmail'
 import { ForgotPassword } from './pages/ForgotPassword'
 import { ResetPassword } from './pages/ResetPassword'
+import { Dashboard } from './pages/admin/Dashboard'
+import { AdminProducts } from './pages/admin/AdminProducts'
+import { AdminOrders } from './pages/admin/AdminOrders'
+import { AdminOrderDetail } from './pages/admin/AdminOrderDetail'
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Storefront (navbar) */}
         <Route element={<Layout />}>
           <Route path="/" element={<Home />} />
           <Route path="/products" element={<ProductList />} />
@@ -30,7 +37,6 @@ function App() {
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
 
-          {/* Halaman khusus pengguna login */}
           <Route element={<ProtectedRoute />}>
             <Route path="/cart" element={<Cart />} />
             <Route path="/checkout" element={<Checkout />} />
@@ -41,6 +47,16 @@ function App() {
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />
+        </Route>
+
+        {/* Panel admin (sidebar sendiri) */}
+        <Route element={<AdminGuard />}>
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<Dashboard />} />
+            <Route path="products" element={<AdminProducts />} />
+            <Route path="orders" element={<AdminOrders />} />
+            <Route path="orders/:code" element={<AdminOrderDetail />} />
+          </Route>
         </Route>
       </Routes>
     </BrowserRouter>

@@ -47,19 +47,26 @@ class MengantarProvider implements ShippingProviderInterface
      *
      * @return array{awb: ?string, order_id: ?string, batch: ?string, is_paid: bool}
      */
-    public function createShipment(Order $order, ShippingDestination $destination, ShippingOption $option): array
+    public function createShipment(Order $order): array
     {
-        $order->loadMissing('items.product');
+        $order->loadMissing('items.product', 'shipment');
+
+        $shipment = $order->shipment;
+        if (! $shipment || ! $shipment->courier) {
+            throw new BusinessException('Kurir pengiriman belum ditentukan.');
+        }
+
+        $destination = $this->destinationFromOrder($order);
 
         $payload = [
-            'courier' => $option->courier,
+            'courier' => $shipment->courier,
             'pickup' => [
                 'type' => 'scheduledPickup',
                 'volume' => 'volumeMotor',
                 'address_id' => $this->pickupAddressId(),
                 'time_id' => $this->pickupTimeId(),
             ],
-            'orders' => [$this->orderPayload($order, $destination, $option)],
+            'orders' => [$this->orderPayload($order, $destination)],
         ];
 
         $created = $this->client->createOrder($payload);
@@ -87,7 +94,7 @@ class MengantarProvider implements ShippingProviderInterface
         ];
     }
 
-    private function orderPayload(Order $order, ShippingDestination $destination, ShippingOption $option): array
+    private function orderPayload(Order $order, ShippingDestination $destination): array
     {
         $address = $order->address_snapshot;
 
@@ -113,6 +120,18 @@ class MengantarProvider implements ShippingProviderInterface
         }
 
         return $payload;
+    }
+
+    private function destinationFromOrder(Order $order): ShippingDestination
+    {
+        $address = $order->address_snapshot;
+
+        return new ShippingDestination(
+            province: $address['province'] ?? '',
+            city: $address['city'] ?? '',
+            district: $address['district'] ?? '',
+            postalCode: $address['postal_code'] ?? '',
+        );
     }
 
     private function orderWeight(Order $order): float

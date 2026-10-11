@@ -44,6 +44,14 @@ export function Navbar() {
               Pesanan
             </Link>
           )}
+          {user?.role === 'admin' && (
+            <Link
+              to="/admin"
+              className="text-sm font-medium text-cream/80 transition hover:text-white"
+            >
+              Admin
+            </Link>
+          )}
         </nav>
 
         <div className="flex items-center gap-2">

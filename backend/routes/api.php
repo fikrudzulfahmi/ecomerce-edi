@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\OrderController as AdminOrderController;
+use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Api\AddressController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CartController;
@@ -65,5 +68,22 @@ Route::prefix('v1')->group(function (): void {
         // Simulasi pembayaran GDC (Fase 6, diganti webhook Fase 8)
         Route::post('/orders/{code}/mock-pay', [MockPaymentController::class, 'success']);
         Route::post('/orders/{code}/mock-fail', [MockPaymentController::class, 'failure']);
+    });
+
+    // Panel admin
+    Route::middleware(['auth:sanctum', 'role:admin'])->prefix('admin')->group(function (): void {
+        Route::get('/dashboard', DashboardController::class);
+
+        Route::get('/products', [AdminProductController::class, 'index']);
+        Route::post('/products', [AdminProductController::class, 'store']);
+        Route::put('/products/{product}', [AdminProductController::class, 'update']);
+        Route::delete('/products/{product}', [AdminProductController::class, 'destroy']);
+        Route::post('/products/{product}/toggle', [AdminProductController::class, 'toggleActive']);
+
+        Route::get('/orders', [AdminOrderController::class, 'index']);
+        Route::get('/orders/{code}', [AdminOrderController::class, 'show']);
+        Route::post('/orders/{code}/confirm-payment', [AdminOrderController::class, 'confirmPayment']);
+        Route::post('/orders/{code}/create-shipment', [AdminOrderController::class, 'createShipment']);
+        Route::post('/orders/{code}/status', [AdminOrderController::class, 'changeStatus']);
     });
 });
