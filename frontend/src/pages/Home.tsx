@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import {
+  Backpack,
   BookMarked,
   BookOpen,
   Download,
@@ -73,8 +74,16 @@ export function Home() {
 
   return (
     <div>
-      <section className="bg-navy text-cream">
-        <Container className="py-16 text-center md:py-24">
+      <section className="relative overflow-hidden bg-navy text-cream">
+        {/* Ornamen dekoratif */}
+        <BookOpen className="pointer-events-none absolute -left-8 top-12 h-32 w-32 -rotate-12 text-cream/10 md:h-48 md:w-48" />
+        <PenTool className="pointer-events-none absolute -right-10 top-8 h-28 w-28 rotate-12 text-cream/10 md:h-44 md:w-44" />
+        <Gift className="pointer-events-none absolute bottom-10 left-[8%] h-20 w-20 -rotate-6 text-orange/20 md:h-32 md:w-32" />
+        <GraduationCap className="pointer-events-none absolute bottom-12 right-[9%] h-20 w-20 rotate-6 text-cream/10 md:h-32 md:w-32" />
+        <BookMarked className="pointer-events-none absolute left-[46%] top-6 h-10 w-10 -rotate-12 text-orange/15 md:h-16 md:w-16" />
+        <Backpack className="pointer-events-none absolute bottom-4 left-[46%] hidden h-12 w-12 rotate-12 text-cream/10 md:block" />
+
+        <Container className="relative py-16 text-center md:py-24">
           <h1 className="text-3xl font-bold text-cream md:text-5xl">Temukan Buku Favoritmu</h1>
           <p className="mx-auto mt-4 max-w-xl text-cream/80">
             Novel, buku agama, referensi, alat tulis, dan merchandise — semua di satu tempat.
