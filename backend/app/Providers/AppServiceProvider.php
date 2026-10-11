@@ -10,6 +10,7 @@ use App\Services\Shipping\MengantarProvider;
 use App\Services\Shipping\MockShippingProvider;
 use App\Services\Shipping\ShippingProviderInterface;
 use Illuminate\Auth\Notifications\ResetPassword;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -36,6 +37,10 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // MariaDB cPanel (default engine MyISAM) membatasi index ke 1000 byte →
+        // 1071 "key too long" pada varchar(255) utf8mb4. Batasi ke 191 (764 byte).
+        Schema::defaultStringLength(191);
+
         ResetPassword::createUrlUsing(function (User $user, string $token): string {
             return config('app.frontend_url')
                 .'/reset-password?token='.$token
