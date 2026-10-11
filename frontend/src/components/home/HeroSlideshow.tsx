@@ -25,12 +25,30 @@ function HeroArt() {
         {/* main icon */}
         <BookOpen className="absolute right-[8rem] top-1/2 h-12 w-12 -translate-y-1/2 text-white" />
         {/* floating accents */}
-        <PenTool className="absolute right-12 top-[24%] h-9 w-9 rotate-12 text-orange-light" />
-        <Gift className="absolute right-[26%] top-[16%] h-11 w-11 -rotate-6 text-orange" />
-        <GraduationCap className="absolute right-[20%] bottom-[22%] h-9 w-9 -rotate-12 text-white/80" />
-        <Star className="absolute right-[34%] top-[30%] h-5 w-5 fill-orange-light text-orange-light" />
-        <Sparkles className="absolute right-[13%] bottom-[34%] h-5 w-5 text-white/60" />
-        <Heart className="absolute right-[30%] bottom-[10%] h-6 w-6 rotate-6 text-white/50" />
+        <PenTool
+          className="animate-float absolute right-12 top-[24%] h-9 w-9 rotate-12 text-orange-light"
+          style={{ animationDelay: '0s' }}
+        />
+        <Gift
+          className="animate-float absolute right-[26%] top-[16%] h-11 w-11 -rotate-6 text-orange"
+          style={{ animationDelay: '0.5s' }}
+        />
+        <GraduationCap
+          className="animate-float absolute right-[20%] bottom-[22%] h-9 w-9 -rotate-12 text-white/80"
+          style={{ animationDelay: '1s' }}
+        />
+        <Star
+          className="animate-float absolute right-[34%] top-[30%] h-5 w-5 fill-orange-light text-orange-light"
+          style={{ animationDelay: '1.5s' }}
+        />
+        <Sparkles
+          className="animate-float absolute right-[13%] bottom-[34%] h-5 w-5 text-white/60"
+          style={{ animationDelay: '2s' }}
+        />
+        <Heart
+          className="animate-float absolute right-[30%] bottom-[10%] h-6 w-6 rotate-6 text-white/50"
+          style={{ animationDelay: '0.8s' }}
+        />
       </div>
     </div>
   )

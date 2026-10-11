@@ -25,6 +25,30 @@
   --shadow-soft: 0 1px 4px rgb(0 0 0 / 0.05);
   --shadow-card: 0 2px 8px rgb(0 0 0 / 0.06);
   --shadow-glow: 0 8px 24px rgb(0 0 0 / 0.10);
+
+  /* Animations */
+  --animate-float: float 4s ease-in-out infinite;
+  --animate-pulse-soft: pulse-soft 5s ease-in-out infinite;
+
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+
+  @keyframes pulse-soft {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.6;
+    }
+  }
 }
 
 @layer base {
