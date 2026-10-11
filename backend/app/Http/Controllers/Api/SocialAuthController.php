@@ -13,12 +13,12 @@ class SocialAuthController
 {
     public function redirect(string $provider): RedirectResponse
     {
-        return Socialite::driver($provider)->redirect();
+        return Socialite::driver($provider)->stateless()->redirect();
     }
 
     public function callback(string $provider)
     {
-        $socialUser = Socialite::driver($provider)->user();
+        $socialUser = Socialite::driver($provider)->stateless()->user();
 
         $user = User::where('email', $socialUser->getEmail())->first();
 
