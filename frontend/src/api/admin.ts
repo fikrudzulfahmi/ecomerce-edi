@@ -1,5 +1,5 @@
 import api from './client'
-import type { AdminSettings, Banner, ChatMessage, Conversation, Order, Product, Voucher, VoucherType } from '../lib/types'
+import type { AdminSettings, Banner, Category, ChatMessage, Conversation, Order, Product, Voucher, VoucherType } from '../lib/types'
 
 export interface Paginated<T> {
   data: T[]
@@ -78,6 +78,30 @@ export async function uploadFile(file: File): Promise<string> {
   form.append('file', file)
   const { data } = await api.post<{ path: string }>('/admin/files', form)
   return data.path
+}
+
+export interface CategoryInput {
+  name: string
+  parent_id?: number | null
+}
+
+export async function fetchAdminCategories(): Promise<Category[]> {
+  const { data } = await api.get<{ data: Category[] }>('/admin/categories')
+  return data.data
+}
+
+export async function createCategory(input: CategoryInput): Promise<Category> {
+  const { data } = await api.post<{ data: Category }>('/admin/categories', input)
+  return data.data
+}
+
+export async function updateCategory(id: number, input: Partial<CategoryInput>): Promise<Category> {
+  const { data } = await api.put<{ data: Category }>(`/admin/categories/${id}`, input)
+  return data.data
+}
+
+export async function deleteCategory(id: number): Promise<void> {
+  await api.delete(`/admin/categories/${id}`)
 }
 
 export async function fetchVouchers(): Promise<Voucher[]> {
