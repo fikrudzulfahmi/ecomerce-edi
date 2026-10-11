@@ -1,5 +1,15 @@
 import { Link, NavLink, Outlet } from 'react-router-dom'
-import { LayoutDashboard, LogOut, Package, Settings, ShoppingBag, Store, Ticket } from 'lucide-react'
+import {
+  LayoutDashboard,
+  LogOut,
+  Megaphone,
+  MessageCircle,
+  Package,
+  Settings,
+  ShoppingBag,
+  Store,
+  Ticket,
+} from 'lucide-react'
 import { useAuthStore } from '../../store/auth'
 
 const links = [
@@ -7,6 +17,8 @@ const links = [
   { to: '/admin/products', label: 'Produk', icon: Package },
   { to: '/admin/orders', label: 'Pesanan', icon: ShoppingBag },
   { to: '/admin/vouchers', label: 'Voucher', icon: Ticket },
+  { to: '/admin/banners', label: 'Banner', icon: Megaphone },
+  { to: '/admin/chat', label: 'Pesan', icon: MessageCircle },
   { to: '/admin/settings', label: 'Pengaturan', icon: Settings },
 ]
 

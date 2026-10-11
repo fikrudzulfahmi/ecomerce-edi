@@ -24,6 +24,8 @@ import { AdminOrders } from './pages/admin/AdminOrders'
 import { AdminOrderDetail } from './pages/admin/AdminOrderDetail'
 import { AdminVouchers } from './pages/admin/AdminVouchers'
 import { AdminSettings } from './pages/admin/AdminSettings'
+import { AdminBanners } from './pages/admin/AdminBanners'
+import { AdminChat } from './pages/admin/AdminChat'
 
 function App() {
   return (
@@ -61,6 +63,8 @@ function App() {
             <Route path="orders" element={<AdminOrders />} />
             <Route path="orders/:code" element={<AdminOrderDetail />} />
             <Route path="vouchers" element={<AdminVouchers />} />
+            <Route path="banners" element={<AdminBanners />} />
+            <Route path="chat" element={<AdminChat />} />
             <Route path="settings" element={<AdminSettings />} />
           </Route>
         </Route>

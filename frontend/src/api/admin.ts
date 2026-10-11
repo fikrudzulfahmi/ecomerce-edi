@@ -1,5 +1,5 @@
 import api from './client'
-import type { AdminSettings, Order, Product, Voucher, VoucherType } from '../lib/types'
+import type { AdminSettings, Banner, ChatMessage, Conversation, Order, Product, Voucher, VoucherType } from '../lib/types'
 
 export interface Paginated<T> {
   data: T[]
@@ -122,6 +122,59 @@ export async function fetchSettings(): Promise<AdminSettings> {
 
 export async function updateSettings(settings: AdminSettings): Promise<AdminSettings> {
   const { data } = await api.put<{ data: AdminSettings }>('/admin/settings', settings)
+  return data.data
+}
+
+export async function fetchAdminBanners(): Promise<Banner[]> {
+  const { data } = await api.get<{ data: Banner[] }>('/admin/banners')
+  return data.data
+}
+
+export interface BannerInput {
+  title?: string | null
+  subtitle?: string | null
+  image?: string | null
+  link?: string | null
+  sort_order?: number
+  is_active?: boolean
+}
+
+export async function createBanner(input: BannerInput): Promise<Banner> {
+  const { data } = await api.post<{ data: Banner }>('/admin/banners', input)
+  return data.data
+}
+
+export async function updateBanner(id: number, input: BannerInput): Promise<Banner> {
+  const { data } = await api.put<{ data: Banner }>(`/admin/banners/${id}`, input)
+  return data.data
+}
+
+export async function deleteBanner(id: number): Promise<void> {
+  await api.delete(`/admin/banners/${id}`)
+}
+
+export async function toggleBanner(id: number): Promise<Banner> {
+  const { data } = await api.post<{ data: Banner }>(`/admin/banners/${id}/toggle`)
+  return data.data
+}
+
+export async function fetchAdminConversations(): Promise<Conversation[]> {
+  const { data } = await api.get<{ data: Conversation[] }>('/admin/conversations')
+  return data.data
+}
+
+export async function fetchAdminMessages(conversationId: number): Promise<ChatMessage[]> {
+  const { data } = await api.get<{ data: ChatMessage[] }>(
+    `/admin/conversations/${conversationId}/messages`,
+  )
+  return data.data
+}
+
+export async function sendAdminMessage(conversationId: number, content: string): Promise<ChatMessage> {
+  const { data } = await api.post<{ data: ChatMessage }>(
+    `/admin/conversations/${conversationId}/messages`,
+    { content },
+  )
   return data.data
 }
 

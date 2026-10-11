@@ -1,13 +1,16 @@
 import { Fragment, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { Minus, Plus, ShoppingCart } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
 import { useAddCartItem, useProduct } from '../api/hooks'
+import { fetchReviews } from '../api/reviews'
 import { formatRupiah } from '../lib/format'
 import { extractErrorMessage } from '../lib/errors'
 import { saveCartIntent } from '../lib/intent'
 import { useAuthStore } from '../store/auth'
 import { Container } from '../components/layout/Container'
 import { ProductCard } from '../components/product/ProductCard'
+import { RatingStars } from '../components/product/RatingStars'
 import { Skeleton } from '../components/ui/Skeleton'
 import { Button } from '../components/ui/Button'
 
@@ -20,6 +23,11 @@ export function ProductDetail() {
   const addItem = useAddCartItem()
   const [addMessage, setAddMessage] = useState<string | null>(null)
   const [addError, setAddError] = useState<string | null>(null)
+
+  const { data: reviews } = useQuery({
+    queryKey: ['reviews', slug],
+    queryFn: () => fetchReviews(slug),
+  })
 
   if (isLoading) {
     return (
@@ -113,6 +121,15 @@ export function ProductDetail() {
 
           <p className="text-3xl font-bold text-navy">{formatRupiah(product.price)}</p>
 
+          {product.rating_count > 0 && (
+            <div className="flex items-center gap-2">
+              <RatingStars rating={product.rating_avg} size={14} />
+              <span className="text-sm text-ink-muted">
+                {product.rating_avg.toFixed(1)} · {product.rating_count} ulasan
+              </span>
+            </div>
+          )}
+
           {details.length > 0 && (
             <div className="rounded-lg border border-cream-darker bg-white p-4 text-sm">
               <dl className="grid grid-cols-[8rem_1fr] gap-y-2">
@@ -181,6 +198,26 @@ export function ProductDetail() {
           {addError && <p className="text-sm text-red-600">{addError}</p>}
         </div>
       </div>
+
+      {reviews && reviews.length > 0 && (
+        <section className="mt-16">
+          <h2 className="text-2xl font-bold">Ulasan</h2>
+          <div className="mt-4 space-y-4">
+            {reviews.map((r) => (
+              <div key={r.id} className="rounded-lg border border-cream-darker bg-white p-4">
+                <div className="flex items-center justify-between">
+                  <span className="font-medium text-ink">{r.user.name}</span>
+                  <RatingStars rating={r.rating} size={13} />
+                </div>
+                {r.comment && <p className="mt-2 text-sm text-ink">{r.comment}</p>}
+                {r.created_at && (
+                  <p className="mt-1 text-xs text-ink-muted">{r.created_at.slice(0, 10)}</p>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {data.related.length > 0 && (
         <section className="mt-16">

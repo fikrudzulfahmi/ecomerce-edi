@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\BannerController as AdminBannerController;
+use App\Http\Controllers\Admin\ChatController as AdminChatController;
 use App\Http\Controllers\Admin\FileController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
@@ -10,8 +12,10 @@ use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\VoucherController;
 use App\Http\Controllers\Api\AddressController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\BannerController;
 use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\CategoryController;
+use App\Http\Controllers\Api\ChatController;
 use App\Http\Controllers\Api\CheckoutController;
 use App\Http\Controllers\Api\DownloadController;
 use App\Http\Controllers\Api\EmailVerificationController;
@@ -20,6 +24,7 @@ use App\Http\Controllers\Api\MengantarWebhookController;
 use App\Http\Controllers\Api\MockPaymentController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\ProductController;
+use App\Http\Controllers\Api\ReviewController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function (): void {
@@ -45,6 +50,8 @@ Route::prefix('v1')->group(function (): void {
     Route::get('/categories', [CategoryController::class, 'index']);
     Route::get('/products', [ProductController::class, 'index']);
     Route::get('/products/{slug}', [ProductController::class, 'show']);
+    Route::get('/products/{slug}/reviews', [ReviewController::class, 'index']);
+    Route::get('/banners', [BannerController::class, 'index']);
 
     Route::middleware('auth:sanctum')->group(function (): void {
         Route::post('/logout', [AuthController::class, 'logout']);
@@ -81,6 +88,15 @@ Route::prefix('v1')->group(function (): void {
         Route::get('/library', [LibraryController::class, 'index']);
         Route::get('/library/items/{orderItem}/download-url', [LibraryController::class, 'downloadUrl']);
 
+        // Ulasan
+        Route::post('/reviews', [ReviewController::class, 'store']);
+
+        // Chat dengan toko
+        Route::get('/chat/conversations', [ChatController::class, 'index']);
+        Route::post('/chat/conversations', [ChatController::class, 'store']);
+        Route::get('/chat/conversations/{conversation}/messages', [ChatController::class, 'messages']);
+        Route::post('/chat/conversations/{conversation}/messages', [ChatController::class, 'send']);
+
         // Simulasi pembayaran GDC (Fase 6, diganti webhook Fase 8)
         Route::post('/orders/{code}/mock-pay', [MockPaymentController::class, 'success']);
         Route::post('/orders/{code}/mock-fail', [MockPaymentController::class, 'failure']);
@@ -100,6 +116,16 @@ Route::prefix('v1')->group(function (): void {
 
         Route::get('/settings', [SettingController::class, 'index']);
         Route::put('/settings', [SettingController::class, 'update']);
+
+        Route::get('/banners', [AdminBannerController::class, 'index']);
+        Route::post('/banners', [AdminBannerController::class, 'store']);
+        Route::put('/banners/{banner}', [AdminBannerController::class, 'update']);
+        Route::delete('/banners/{banner}', [AdminBannerController::class, 'destroy']);
+        Route::post('/banners/{banner}/toggle', [AdminBannerController::class, 'toggle']);
+
+        Route::get('/conversations', [AdminChatController::class, 'index']);
+        Route::get('/conversations/{conversation}/messages', [AdminChatController::class, 'messages']);
+        Route::post('/conversations/{conversation}/messages', [AdminChatController::class, 'send']);
 
         Route::get('/products', [AdminProductController::class, 'index']);
         Route::post('/products', [AdminProductController::class, 'store']);

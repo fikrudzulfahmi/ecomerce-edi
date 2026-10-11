@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { ImageOff } from 'lucide-react'
 import type { Product } from '../../lib/types'
 import { formatRupiah } from '../../lib/format'
+import { RatingStars } from './RatingStars'
 
 export function ProductCard({ product }: { product: Product }) {
   const image = product.images[0]
@@ -44,6 +45,12 @@ export function ProductCard({ product }: { product: Product }) {
       <div className="flex flex-1 flex-col p-2.5">
         <p className="text-sm font-bold text-ink">{formatRupiah(product.price)}</p>
         <p className="mt-0.5 line-clamp-2 text-xs leading-snug text-ink-muted">{product.name}</p>
+        {product.rating_count > 0 && (
+          <div className="mt-1 flex items-center gap-1">
+            <RatingStars rating={product.rating_avg} size={11} />
+            <span className="text-[11px] text-ink-muted">({product.rating_count})</span>
+          </div>
+        )}
         {product.category && (
           <p className="mt-auto pt-1 text-[11px] text-ink-muted/70">{product.category.name}</p>
         )}

@@ -1,7 +1,7 @@
 import api from './client'
 import type { Category, Product } from '../lib/types'
 
-export type ProductSort = 'latest' | 'price_asc' | 'price_desc' | 'name_asc'
+export type ProductSort = 'latest' | 'price_asc' | 'price_desc' | 'name_asc' | 'rating'
 
 export interface ProductQuery {
   q?: string

@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom'
 import {
-  Backpack,
   BookMarked,
   BookOpen,
   ChevronRight,
@@ -14,6 +13,7 @@ import {
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { Container } from '../components/layout/Container'
+import { HeroSlideshow } from '../components/home/HeroSlideshow'
 import { ProductCard } from '../components/product/ProductCard'
 import { ProductCardSkeleton, Skeleton } from '../components/ui/Skeleton'
 import { useCategories, useProducts } from '../api/hooks'
@@ -68,6 +68,7 @@ function ProductSection({ title, products, loading, linkTo }: ProductSectionProp
 export function Home() {
   const { data: categories, isLoading: loadingCategories } = useCategories()
   const { data: latest, isLoading: loadingLatest } = useProducts({ sort: 'latest', per_page: 10 })
+  const { data: topRated, isLoading: loadingTopRated } = useProducts({ sort: 'rating', per_page: 10 })
   const { data: books, isLoading: loadingBooks } = useProducts({
     type: 'book',
     sort: 'latest',
@@ -77,42 +78,12 @@ export function Home() {
   return (
     <div>
       <Container className="py-6">
-        {/* Banner promo */}
-        <section className="relative mt-2 overflow-hidden rounded-2xl bg-gradient-to-br from-navy via-navy to-navy-light text-white shadow-glow">
-          <div className="absolute -right-16 -top-16 h-64 w-64 rounded-full bg-orange/20 blur-3xl" />
-          <div className="absolute -bottom-20 -left-10 h-64 w-64 rounded-full bg-navy-light/40 blur-3xl" />
-          <BookOpen className="pointer-events-none absolute -left-6 top-10 h-32 w-32 -rotate-12 text-white/10" />
-          <PenTool className="pointer-events-none absolute right-10 top-6 hidden h-24 w-24 rotate-12 text-white/10 md:block" />
-          <Gift className="pointer-events-none absolute bottom-8 right-[22%] h-16 w-16 -rotate-6 text-orange/30" />
-          <Backpack className="pointer-events-none absolute bottom-6 left-1/2 hidden h-14 w-14 rotate-12 text-white/10 lg:block" />
-
-          <div className="relative px-6 py-12 md:px-14 md:py-20">
-            <span className="inline-block rounded-full bg-orange px-3 py-1 text-xs font-bold uppercase tracking-wide">
-              Promo Spesial
-            </span>
-            <h1 className="mt-4 text-3xl font-bold leading-tight md:text-5xl">
-              Temukan Buku
-              <br className="hidden md:block" /> Favoritmu
-            </h1>
-            <p className="mt-3 max-w-lg text-sm text-white/85 md:text-base">
-              Novel, buku agama, referensi, alat tulis, dan merchandise — semua di satu tempat.
-            </p>
-            <Link
-              to="/products"
-              className="mt-6 inline-block rounded-full bg-orange px-7 py-3 font-semibold text-white shadow-lg shadow-orange/30 transition hover:bg-orange-dark"
-            >
-              Jelajahi Katalog
-            </Link>
-          </div>
-        </section>
+        <HeroSlideshow />
 
         {/* Strip fitur */}
         <section className="mt-4 grid gap-3 sm:grid-cols-3">
           {FEATURES.map(({ icon: Icon, label, sub }) => (
-            <div
-              key={label}
-              className="flex items-center gap-3 rounded-xl bg-white p-4 shadow-card"
-            >
+            <div key={label} className="flex items-center gap-3 rounded-xl bg-white p-4 shadow-card">
               <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-navy/10 text-navy">
                 <Icon className="h-5 w-5" />
               </span>
@@ -152,6 +123,12 @@ export function Home() {
           </div>
         </section>
 
+        <ProductSection
+          title="Rating Tertinggi"
+          products={topRated?.data}
+          loading={loadingTopRated}
+          linkTo="/products?sort=rating"
+        />
         <ProductSection
           title="Produk Terbaru"
           products={latest?.data}

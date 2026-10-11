@@ -53,6 +53,8 @@ export interface Product {
   book_detail: BookDetail | null
   digital_file: string | null
   bundle_physical_id: number | null
+  rating_avg: number
+  rating_count: number
   created_at: string
 }
 
@@ -186,4 +188,37 @@ export interface Voucher {
 
 export interface AdminSettings {
   handling_fee: number
+}
+
+export interface Banner {
+  id: number
+  title: string | null
+  subtitle: string | null
+  image: string | null
+  link: string | null
+  sort_order: number
+  is_active: boolean
+}
+
+export interface Review {
+  id: number
+  rating: number
+  comment: string | null
+  user: { name: string }
+  created_at: string | null
+}
+
+export interface Conversation {
+  id: number
+  subject: string | null
+  last_message_at: string | null
+  unread?: number
+  user?: string
+}
+
+export interface ChatMessage {
+  id: number
+  sender: 'user' | 'admin'
+  content: string
+  created_at: string | null
 }

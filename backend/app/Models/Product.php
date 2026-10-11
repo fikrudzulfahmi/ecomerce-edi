@@ -30,6 +30,8 @@ class Product extends Model
         'images',
         'digital_file',
         'bundle_physical_id',
+        'rating_avg',
+        'rating_count',
     ];
 
     protected function casts(): array
@@ -40,6 +42,8 @@ class Product extends Model
             'weight_gram' => 'integer',
             'stock' => 'integer',
             'images' => 'array',
+            'rating_avg' => 'float',
+            'rating_count' => 'integer',
         ];
     }
 
@@ -61,6 +65,11 @@ class Product extends Model
     public function bundlePhysical(): BelongsTo
     {
         return $this->belongsTo(Product::class, 'bundle_physical_id');
+    }
+
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(Review::class);
     }
 
     public function isEbook(): bool

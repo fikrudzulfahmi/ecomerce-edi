@@ -23,6 +23,8 @@ class ProductResource extends JsonResource
             'images' => $this->images ?? [],
             'digital_file' => $this->digital_file,
             'bundle_physical_id' => $this->bundle_physical_id,
+            'rating_avg' => (float) ($this->rating_avg ?? 0),
+            'rating_count' => (int) ($this->rating_count ?? 0),
             'description' => $this->description,
             'category' => new CategoryResource($this->whenLoaded('category')),
             'book_detail' => new BookDetailResource($this->whenLoaded('bookDetail')),

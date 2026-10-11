@@ -58,6 +58,8 @@ class ProductController
             $query->orderBy('price', 'desc');
         } elseif ($sort === 'name_asc') {
             $query->orderBy('name', 'asc');
+        } elseif ($sort === 'rating') {
+            $query->orderByDesc('rating_avg')->orderByDesc('rating_count');
         } else {
             $query->latest('created_at');
         }

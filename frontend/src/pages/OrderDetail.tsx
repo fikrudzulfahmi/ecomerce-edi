@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { Download, MapPin, Truck } from 'lucide-react'
+import { Download, MapPin, Star, Truck } from 'lucide-react'
 import { useCancelOrder, useOrder } from '../api/hooks'
 import { getDownloadUrl } from '../api/library'
+import { createReview } from '../api/reviews'
 import { formatRupiah } from '../lib/format'
+import { extractErrorMessage } from '../lib/errors'
 import { isCancellable, orderStatusLabel, orderStatusTone } from '../lib/order-status'
 import { Container } from '../components/layout/Container'
 import { Button } from '../components/ui/Button'
@@ -15,6 +17,11 @@ export function OrderDetail() {
   const { data: order, isLoading } = useOrder(code)
   const cancel = useCancelOrder()
   const [downloading, setDownloading] = useState<number | null>(null)
+  const [reviewing, setReviewing] = useState<{ id: number; name: string } | null>(null)
+  const [rating, setRating] = useState(5)
+  const [comment, setComment] = useState('')
+  const [reviewBusy, setReviewBusy] = useState(false)
+  const [reviewError, setReviewError] = useState<string | null>(null)
 
   const handleDownload = async (itemId: number) => {
     setDownloading(itemId)
@@ -46,6 +53,29 @@ export function OrderDetail() {
     order.payment_method === 'cod'
       ? order.status === 'COD_COMPLETED'
       : ['PAID', 'PROCESSING', 'SHIPPED', 'DELIVERED'].includes(order.status)
+
+  const canReview = order.status === 'DELIVERED' || order.status === 'COD_COMPLETED'
+
+  const submitReview = async () => {
+    if (!reviewing) return
+    setReviewBusy(true)
+    setReviewError(null)
+    try {
+      await createReview({
+        order_id: order.id,
+        product_id: reviewing.id,
+        rating,
+        comment: comment.trim() || undefined,
+      })
+      setReviewing(null)
+      setComment('')
+      setRating(5)
+    } catch (err) {
+      setReviewError(extractErrorMessage(err))
+    } finally {
+      setReviewBusy(false)
+    }
+  }
 
   return (
     <Container className="py-10">
@@ -110,6 +140,14 @@ export function OrderDetail() {
                         className="flex items-center gap-1.5 rounded-md bg-navy px-2.5 py-1.5 text-xs font-semibold text-white transition hover:bg-navy-dark disabled:opacity-50"
                       >
                         <Download className="h-3.5 w-3.5" /> Unduh
+                      </button>
+                    )}
+                    {canReview && item.product && (
+                      <button
+                        onClick={() => setReviewing({ id: item.product!.id, name: item.name })}
+                        className="flex items-center gap-1.5 rounded-md border border-navy px-2.5 py-1.5 text-xs font-semibold text-navy transition hover:bg-navy hover:text-white"
+                      >
+                        <Star className="h-3.5 w-3.5" /> Ulas
                       </button>
                     )}
                   </div>
@@ -185,6 +223,45 @@ export function OrderDetail() {
           )}
         </aside>
       </div>
+
+      {reviewing && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-glow">
+            <h3 className="text-lg font-bold">Beri Ulasan</h3>
+            <p className="mt-1 text-sm text-ink-muted">{reviewing.name}</p>
+            <div className="mt-4 flex gap-1">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <button key={i} onClick={() => setRating(i)} aria-label={`${i} bintang`}>
+                  <Star
+                    className={`h-7 w-7 transition ${
+                      i <= rating ? 'fill-amber-400 text-amber-400' : 'fill-gray-200 text-gray-200'
+                    }`}
+                  />
+                </button>
+              ))}
+            </div>
+            <textarea
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              placeholder="Tulis ulasanmu (opsional)"
+              rows={3}
+              className="mt-4 w-full rounded-lg border border-cream-darker px-3 py-2 text-sm focus:border-navy focus:outline-none"
+            />
+            {reviewError && <p className="mt-2 text-sm text-red-600">{reviewError}</p>}
+            <div className="mt-4 flex justify-end gap-2">
+              <button
+                onClick={() => setReviewing(null)}
+                className="rounded-lg px-4 py-2 text-sm text-ink-muted transition hover:bg-cream-dark"
+              >
+                Batal
+              </button>
+              <Button onClick={submitReview} loading={reviewBusy}>
+                Kirim
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </Container>
   )
 }

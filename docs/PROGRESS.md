@@ -27,6 +27,7 @@
 - **Fase 9** — Panel admin: `DashboardController` (statistik), `Admin\ProductController` (CRUD + toggle), `Admin\OrderController` (list/detail/konfirmasi pembayaran/buat resi via Mengantar/ubah status), rute `role:admin`, FE admin (guard + sidebar layout + halaman dashboard/produk/pesanan/detail).
 - **Fitur E-Book** — jenis produk `ebook` & `bundle`; checkout digital (tanpa alamat/ongkir, wajib GDC, `PAID → DELIVERED` instan); stok ebook dilewati (CartController + OrderService); download tertanda tangan (24 jam) via halaman **Pustaka** + detail pesanan; upload file PDF/EPUB + pilih buku fisik (bundle) di admin.
 - **Voucher & biaya penanganan** — `vouchers` (free_shipping / discount_fixed / discount_percent, validasi + kuota + masa berlaku), `settings` (`handling_fee`), `VoucherService`; rumus total `subtotal + ongkir + handling − diskon`; endpoint `GET /checkout/meta` + `POST /checkout/voucher` (preview); admin kelola voucher + biaya penanganan. Refresh desain soft/glassy (shadow tokens, navbar glassy, kartu rounded-2xl).
+- **Slideshow hero, rating/ulasan, & chat toko** — `banners` (slideshow hero, admin kelola promo/pengumuman), `reviews` (rating 1–5 + komentar setelah pesanan diterima, agregat `rating_avg`/`rating_count` di produk, sort `rating`), `conversations`+`messages` (chat buyer↔admin, polling); FE hero carousel + bintang rating + seksi "Rating Tertinggi" + form ulasan + widget chat + admin banner/pesan. Rombak tampilan gaya Tokopedia (navy).
 
 ## Catatan penting
 
