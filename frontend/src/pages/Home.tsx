@@ -1,9 +1,39 @@
 import { Link } from 'react-router-dom'
+import {
+  BookMarked,
+  BookOpen,
+  Download,
+  Gift,
+  GraduationCap,
+  Heart,
+  PenTool,
+  ShieldCheck,
+  Truck,
+  Wallet,
+} from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 import { Container } from '../components/layout/Container'
 import { ProductCard } from '../components/product/ProductCard'
 import { ProductCardSkeleton, Skeleton } from '../components/ui/Skeleton'
 import { useCategories, useProducts } from '../api/hooks'
 import type { Product } from '../lib/types'
+
+const FEATURES: { icon: LucideIcon; label: string }[] = [
+  { icon: Truck, label: 'Kirim Mengantar' },
+  { icon: Download, label: 'E-book instan' },
+  { icon: ShieldCheck, label: 'Pembayaran aman' },
+  { icon: Wallet, label: 'COD tersedia' },
+]
+
+function categoryIcon(slug: string): LucideIcon {
+  if (slug.includes('tulis')) return PenTool
+  if (slug.includes('merchandise') || slug.includes('aksesoris')) return Gift
+  if (slug.includes('buku') || slug.includes('novel') || slug.includes('sastra')) return BookOpen
+  if (slug.includes('agama') || slug.includes('spiritual')) return BookMarked
+  if (slug.includes('pendidikan') || slug.includes('referensi')) return GraduationCap
+  if (slug.includes('anak') || slug.includes('remaja')) return Heart
+  return BookMarked
+}
 
 interface ProductSectionProps {
   title: string
@@ -55,24 +85,47 @@ export function Home() {
           >
             Jelajahi Katalog
           </Link>
+
+          <div className="mx-auto mt-10 flex max-w-2xl flex-wrap items-center justify-center gap-3">
+            {FEATURES.map(({ icon: Icon, label }) => (
+              <span
+                key={label}
+                className="flex items-center gap-2 rounded-full border border-cream/20 bg-cream/5 px-4 py-2 text-sm text-cream/90"
+              >
+                <Icon className="h-4 w-4 text-orange" />
+                {label}
+              </span>
+            ))}
+          </div>
         </Container>
       </section>
 
       <Container className="py-12">
         <section>
           <h2 className="text-2xl font-bold">Kategori</h2>
-          <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+          <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
             {loadingCategories
-              ? Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-20" />)
-              : categories?.map((cat) => (
-                  <Link
-                    key={cat.id}
-                    to={`/products?category=${cat.slug}`}
-                    className="rounded-lg border border-cream-darker bg-white p-4 text-center transition hover:shadow-sm"
-                  >
-                    <span className="font-medium text-navy">{cat.name}</span>
-                  </Link>
-                ))}
+              ? Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-32" />)
+              : categories?.map((cat) => {
+                  const Icon = categoryIcon(cat.slug)
+                  return (
+                    <Link
+                      key={cat.id}
+                      to={`/products?category=${cat.slug}`}
+                      className="group flex flex-col items-center gap-3 rounded-lg border border-cream-darker bg-white p-6 text-center transition hover:-translate-y-0.5 hover:border-navy/30 hover:shadow-md"
+                    >
+                      <span className="flex h-14 w-14 items-center justify-center rounded-full bg-navy/10 text-navy transition group-hover:bg-navy group-hover:text-cream">
+                        <Icon className="h-6 w-6" />
+                      </span>
+                      <span className="font-semibold text-navy">{cat.name}</span>
+                      {cat.children && cat.children.length > 0 && (
+                        <span className="text-xs leading-relaxed text-ink-muted">
+                          {cat.children.map((c) => c.name).join(' · ')}
+                        </span>
+                      )}
+                    </Link>
+                  )
+                })}
           </div>
         </section>
 
