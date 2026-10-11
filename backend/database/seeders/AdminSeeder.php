@@ -13,14 +13,12 @@ class AdminSeeder extends Seeder
 {
     public function run(): void
     {
-        $email = env('ADMIN_EMAIL', 'admin@example.com');
-
         User::updateOrCreate(
-            ['email' => $email],
+            ['email' => config('admin.email', 'admin@example.com')],
             [
-                'name' => env('ADMIN_NAME', 'Administrator'),
-                'phone' => env('ADMIN_PHONE'),
-                'password' => Hash::make(env('ADMIN_PASSWORD', 'password')),
+                'name' => config('admin.name', 'Administrator'),
+                'phone' => config('admin.phone'),
+                'password' => Hash::make((string) config('admin.password', 'password')),
                 'role' => Role::Admin,
                 'email_verified_at' => now(),
             ],

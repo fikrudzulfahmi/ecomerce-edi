@@ -48,5 +48,5 @@ export async function resendVerification(): Promise<void> {
 }
 
 export function googleAuthUrl(): string {
-  return '/api/v1/auth/google/redirect'
+  return `${import.meta.env.VITE_API_BASE_URL || ''}/api/v1/auth/google/redirect`
 }
