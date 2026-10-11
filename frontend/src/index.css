@@ -40,6 +40,6 @@
   h2,
   h3,
   h4 {
-    @apply font-sans font-bold text-ink;
+    @apply font-sans font-bold;
   }
 }
