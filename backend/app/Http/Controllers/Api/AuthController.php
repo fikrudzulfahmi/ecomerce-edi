@@ -29,7 +29,12 @@ class AuthController
             'role' => Role::Customer->value,
         ]);
 
-        $user->sendEmailVerificationNotification();
+        // Email verifikasi best-effort: jangan gagalkan pendaftaran bila SMTP bermasalah.
+        try {
+            $user->sendEmailVerificationNotification();
+        } catch (\Throwable $e) {
+            report($e);
+        }
 
         $token = $user->createToken('auth')->plainTextToken;
 
