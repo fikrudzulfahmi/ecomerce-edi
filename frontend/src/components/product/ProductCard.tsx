@@ -22,6 +22,11 @@ export function ProductCard({ product }: { product: Product }) {
             Bundle
           </span>
         )}
+        {product.type !== 'ebook' && product.stock > 0 && product.stock <= 5 && (
+          <span className="absolute bottom-2 left-2 z-10 rounded bg-orange px-1.5 py-0.5 text-[11px] font-semibold text-white">
+            Sisa {product.stock}
+          </span>
+        )}
         {image ? (
           <img
             src={image}
