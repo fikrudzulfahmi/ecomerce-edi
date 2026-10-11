@@ -22,6 +22,7 @@ import { Account } from './pages/Account'
 import { AuthCallback } from './pages/AuthCallback'
 import { Dashboard } from './pages/admin/Dashboard'
 import { AdminProducts } from './pages/admin/AdminProducts'
+import { AdminCategories } from './pages/admin/AdminCategories'
 import { AdminOrders } from './pages/admin/AdminOrders'
 import { AdminOrderDetail } from './pages/admin/AdminOrderDetail'
 import { AdminVouchers } from './pages/admin/AdminVouchers'
@@ -64,6 +65,7 @@ function App() {
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<Dashboard />} />
             <Route path="products" element={<AdminProducts />} />
+            <Route path="categories" element={<AdminCategories />} />
             <Route path="orders" element={<AdminOrders />} />
             <Route path="orders/:code" element={<AdminOrderDetail />} />
             <Route path="vouchers" element={<AdminVouchers />} />

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\Admin\BannerController as AdminBannerController;
+use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\ChatController as AdminChatController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\FileController;
@@ -115,6 +116,11 @@ Route::prefix('v1')->group(function (): void {
         Route::get('/dashboard', DashboardController::class);
 
         Route::post('/files', [FileController::class, 'store']);
+
+        Route::get('/categories', [AdminCategoryController::class, 'index']);
+        Route::post('/categories', [AdminCategoryController::class, 'store']);
+        Route::put('/categories/{category}', [AdminCategoryController::class, 'update']);
+        Route::delete('/categories/{category}', [AdminCategoryController::class, 'destroy']);
 
         Route::get('/vouchers', [VoucherController::class, 'index']);
         Route::post('/vouchers', [VoucherController::class, 'store']);

@@ -1,6 +1,7 @@
 import { Link, NavLink, Outlet } from 'react-router-dom'
 import {
   LayoutDashboard,
+  ListTree,
   LogOut,
   Megaphone,
   MessageCircle,
@@ -15,6 +16,7 @@ import { useAuthStore } from '../../store/auth'
 const links = [
   { to: '/admin', label: 'Dashboard', icon: LayoutDashboard, end: true },
   { to: '/admin/products', label: 'Produk', icon: Package },
+  { to: '/admin/categories', label: 'Kategori', icon: ListTree },
   { to: '/admin/orders', label: 'Pesanan', icon: ShoppingBag },
   { to: '/admin/vouchers', label: 'Voucher', icon: Ticket },
   { to: '/admin/banners', label: 'Banner', icon: Megaphone },
