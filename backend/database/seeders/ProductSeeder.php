@@ -17,6 +17,7 @@ class ProductSeeder extends Seeder
     {
         $categories = Category::whereNotNull('parent_id')->get()->keyBy('slug');
 
+        $i = 0;
         foreach ($this->books() as [$name, $catSlug, $price, $author, $publisher, $year, $pages]) {
             $product = Product::create([
                 'category_id' => $categories[$catSlug]->id,
@@ -31,6 +32,7 @@ class ProductSeeder extends Seeder
                     $year,
                 ),
                 'price' => $price,
+                'discount_percent' => $i % 3 === 0 ? 10 + 5 * ($i % 6) : 0,
                 'weight_gram' => 400,
                 'stock' => random_int(10, 80),
                 'status' => 'active',
@@ -46,8 +48,11 @@ class ProductSeeder extends Seeder
                 'pages' => $pages,
                 'language' => 'Indonesia',
             ]);
+
+            $i++;
         }
 
+        $j = 0;
         foreach ($this->others() as [$name, $catSlug, $price]) {
             Product::create([
                 'category_id' => $categories[$catSlug]->id,
@@ -56,11 +61,14 @@ class ProductSeeder extends Seeder
                 'slug' => Str::slug($name),
                 'description' => fake()->paragraph(),
                 'price' => $price,
+                'discount_percent' => $j % 4 === 0 ? 20 : 0,
                 'weight_gram' => 300,
                 'stock' => random_int(15, 100),
                 'status' => 'active',
                 'images' => [sprintf('https://picsum.photos/seed/%s/640/640', Str::slug($name))],
             ]);
+
+            $j++;
         }
     }
 
