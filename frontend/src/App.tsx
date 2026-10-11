@@ -18,6 +18,8 @@ import { Register } from './pages/Register'
 import { VerifyEmail } from './pages/VerifyEmail'
 import { ForgotPassword } from './pages/ForgotPassword'
 import { ResetPassword } from './pages/ResetPassword'
+import { Account } from './pages/Account'
+import { AuthCallback } from './pages/AuthCallback'
 import { Dashboard } from './pages/admin/Dashboard'
 import { AdminProducts } from './pages/admin/AdminProducts'
 import { AdminOrders } from './pages/admin/AdminOrders'
@@ -41,6 +43,7 @@ function App() {
           <Route path="/verify-email" element={<VerifyEmail />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/auth/callback" element={<AuthCallback />} />
 
           <Route element={<ProtectedRoute />}>
             <Route path="/cart" element={<Cart />} />
@@ -50,6 +53,7 @@ function App() {
             <Route path="/orders" element={<Orders />} />
             <Route path="/orders/:code" element={<OrderDetail />} />
             <Route path="/library" element={<Library />} />
+            <Route path="/account" element={<Account />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />

@@ -6,6 +6,7 @@ import { z } from 'zod'
 import { useAuthStore } from '../store/auth'
 import { extractErrorMessage } from '../lib/errors'
 import { AuthCard } from '../components/layout/AuthCard'
+import { SocialAuth } from '../components/auth/SocialAuth'
 import { Alert } from '../components/ui/Alert'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
@@ -51,6 +52,8 @@ export function Register() {
       setServerError(extractErrorMessage(error))
     }
   })
+
+  const onSocialSuccess = () => navigate('/', { replace: true })
 
   return (
     <AuthCard title="Daftar" subtitle="Buat akun untuk mulai berbelanja">
@@ -104,6 +107,14 @@ export function Register() {
         <Button type="submit" loading={isSubmitting} className="w-full">
           Daftar
         </Button>
+
+        <div className="flex items-center gap-3 text-xs text-ink-muted">
+          <span className="h-px flex-1 bg-cream-darker" />
+          atau
+          <span className="h-px flex-1 bg-cream-darker" />
+        </div>
+
+        <SocialAuth onSuccess={onSocialSuccess} />
 
         <p className="text-center text-sm text-ink-muted">
           Sudah punya akun?{' '}

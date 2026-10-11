@@ -115,6 +115,11 @@ export function Navbar() {
               Pustaka
             </Link>
           )}
+          {user && (
+            <Link to="/account" className="shrink-0 text-ink-muted transition hover:text-navy">
+              Akun
+            </Link>
+          )}
           {user?.role === 'admin' && (
             <Link to="/admin" className="shrink-0 text-ink-muted transition hover:text-navy">
               Admin

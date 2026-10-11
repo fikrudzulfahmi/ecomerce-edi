@@ -46,3 +46,22 @@ export async function resetPassword(input: ResetPasswordInput): Promise<void> {
 export async function resendVerification(): Promise<void> {
   await api.post('/email/verification-notification')
 }
+
+export interface PhoneOtpResponse {
+  message: string
+  otp?: string
+}
+
+export async function requestPhoneOtp(phone: string): Promise<PhoneOtpResponse> {
+  const { data } = await api.post<PhoneOtpResponse>('/auth/phone/request', { phone })
+  return data
+}
+
+export async function verifyPhoneOtp(phone: string, code: string): Promise<AuthResponse> {
+  const { data } = await api.post<AuthResponse>('/auth/phone/verify', { phone, code })
+  return data
+}
+
+export function googleAuthUrl(): string {
+  return '/api/v1/auth/google/redirect'
+}

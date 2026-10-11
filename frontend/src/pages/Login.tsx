@@ -8,6 +8,7 @@ import { addCartItem } from '../api/cart'
 import { clearCartIntent, getCartIntent } from '../lib/intent'
 import { extractErrorMessage } from '../lib/errors'
 import { AuthCard } from '../components/layout/AuthCard'
+import { SocialAuth } from '../components/auth/SocialAuth'
 import { Alert } from '../components/ui/Alert'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
@@ -55,6 +56,11 @@ export function Login() {
     }
   })
 
+  const onSocialSuccess = () => {
+    const from = (location.state as { from?: { pathname: string } } | null)?.from?.pathname ?? '/'
+    navigate(from, { replace: true })
+  }
+
   return (
     <AuthCard title="Masuk" subtitle="Selamat datang kembali!">
       <form onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>
@@ -87,6 +93,14 @@ export function Login() {
         <Button type="submit" loading={isSubmitting} className="w-full">
           Masuk
         </Button>
+
+        <div className="flex items-center gap-3 text-xs text-ink-muted">
+          <span className="h-px flex-1 bg-cream-darker" />
+          atau
+          <span className="h-px flex-1 bg-cream-darker" />
+        </div>
+
+        <SocialAuth onSuccess={onSocialSuccess} />
 
         <p className="text-center text-sm text-ink-muted">
           Belum punya akun?{' '}

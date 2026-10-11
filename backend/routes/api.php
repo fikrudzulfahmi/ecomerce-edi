@@ -23,8 +23,11 @@ use App\Http\Controllers\Api\LibraryController;
 use App\Http\Controllers\Api\MengantarWebhookController;
 use App\Http\Controllers\Api\MockPaymentController;
 use App\Http\Controllers\Api\OrderController;
+use App\Http\Controllers\Api\PhoneAuthController;
 use App\Http\Controllers\Api\ProductController;
+use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\ReviewController;
+use App\Http\Controllers\Api\SocialAuthController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function (): void {
@@ -53,9 +56,17 @@ Route::prefix('v1')->group(function (): void {
     Route::get('/products/{slug}/reviews', [ReviewController::class, 'index']);
     Route::get('/banners', [BannerController::class, 'index']);
 
+    // Auth sosial & OTP WhatsApp
+    Route::get('/auth/google/redirect', [SocialAuthController::class, 'redirect'])->defaults('provider', 'google');
+    Route::get('/auth/google/callback', [SocialAuthController::class, 'callback'])->defaults('provider', 'google');
+    Route::post('/auth/phone/request', [PhoneAuthController::class, 'request'])->middleware('throttle:6,1');
+    Route::post('/auth/phone/verify', [PhoneAuthController::class, 'verify'])->middleware('throttle:10,1');
+
     Route::middleware('auth:sanctum')->group(function (): void {
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::get('/me', [AuthController::class, 'me']);
+        Route::put('/profile', [ProfileController::class, 'update']);
+        Route::post('/profile/password', [ProfileController::class, 'changePassword']);
         Route::post('/email/verification-notification', [EmailVerificationController::class, 'resend'])
             ->middleware('throttle:6,1');
 
