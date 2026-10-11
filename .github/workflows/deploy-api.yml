@@ -93,6 +93,14 @@ jobs:
             fase "view:cache" php artisan view:cache
             php artisan storage:link 2>/dev/null || true
 
+            # Diagnostik login Google — apakah .env & config punya GOOGLE_*?
+            if grep -qE '^GOOGLE_CLIENT_ID=.+' .env 2>/dev/null; then
+              CL=$(php artisan tinker --execute="echo strlen((string) config('services.google.client_id'));" 2>/dev/null | tail -1 | tr -d '[:space:]')
+              echo "::notice title=GOOGLE CLIENT_ID::.env terisi; config=${CL:-0} karakter (0 berarti config belum ter-cache ulang)"
+            else
+              echo "::warning title=GOOGLE CLIENT_ID::KOSONG/tidak ada di .env — cek penulisan GOOGLE_CLIENT_ID"
+            fi
+
             echo "OK: deploy API selesai"
 
       - name: Diagnostik (hanya saat gagal)
