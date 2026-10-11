@@ -5,10 +5,10 @@
   --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
   --font-serif: 'Merriweather', Georgia, serif;
 
-  /* Brand — Cozy & Trustworthy */
-  --color-cream: #f8f6f2;
-  --color-cream-dark: #f1eee7;
-  --color-cream-darker: #e9e4da;
+  /* Brand — Tokopedia-style (navy menggantikan hijau) */
+  --color-cream: #f5f5f5;
+  --color-cream-dark: #ececec;
+  --color-cream-darker: #e0e0e0;
 
   --color-navy: #1e3a8a;
   --color-navy-dark: #172c6b;
@@ -21,10 +21,10 @@
   --color-ink: #1f2937;
   --color-ink-muted: #6b7280;
 
-  /* Soft shadows — glassy */
-  --shadow-soft: 0 2px 12px rgb(30 58 138 / 0.06);
-  --shadow-card: 0 6px 24px rgb(30 58 138 / 0.08);
-  --shadow-glow: 0 14px 44px rgb(30 58 138 / 0.14);
+  /* Soft shadows */
+  --shadow-soft: 0 1px 4px rgb(0 0 0 / 0.05);
+  --shadow-card: 0 2px 8px rgb(0 0 0 / 0.06);
+  --shadow-glow: 0 8px 24px rgb(0 0 0 / 0.10);
 }
 
 @layer base {
@@ -34,17 +34,12 @@
 
   body {
     @apply bg-cream font-sans text-ink antialiased;
-    background-image:
-      radial-gradient(60rem 40rem at 0% 0%, rgb(249 115 22 / 0.06), transparent),
-      radial-gradient(55rem 40rem at 100% 0%, rgb(30 58 138 / 0.07), transparent),
-      radial-gradient(45rem 35rem at 50% 100%, rgb(249 115 22 / 0.04), transparent);
-    background-attachment: fixed;
   }
 
   h1,
   h2,
   h3,
   h4 {
-    @apply font-serif text-navy;
+    @apply font-sans font-bold text-ink;
   }
 }

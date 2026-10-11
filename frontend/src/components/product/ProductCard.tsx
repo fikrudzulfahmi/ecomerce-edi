@@ -9,16 +9,16 @@ export function ProductCard({ product }: { product: Product }) {
   return (
     <Link
       to={`/products/${product.slug}`}
-      className="group flex flex-col overflow-hidden rounded-2xl border border-cream-darker/60 bg-white shadow-card transition hover:-translate-y-1 hover:shadow-glow"
+      className="group flex flex-col overflow-hidden rounded-lg bg-white shadow-card transition hover:shadow-glow"
     >
       <div className="relative aspect-square overflow-hidden bg-cream-dark">
         {product.type === 'ebook' && (
-          <span className="absolute left-2 top-2 z-10 rounded bg-blue-600 px-2 py-0.5 text-xs font-semibold text-white">
+          <span className="absolute left-2 top-2 z-10 rounded bg-blue-600 px-1.5 py-0.5 text-[11px] font-semibold text-white">
             E-Book
           </span>
         )}
         {product.type === 'bundle' && (
-          <span className="absolute left-2 top-2 z-10 rounded bg-purple-600 px-2 py-0.5 text-xs font-semibold text-white">
+          <span className="absolute left-2 top-2 z-10 rounded bg-purple-600 px-1.5 py-0.5 text-[11px] font-semibold text-white">
             Bundle
           </span>
         )}
@@ -36,15 +36,15 @@ export function ProductCard({ product }: { product: Product }) {
         )}
       </div>
 
-      <div className="flex flex-1 flex-col gap-1 p-4">
-        <p className="line-clamp-2 text-sm font-medium text-navy">{product.name}</p>
-        {product.book_detail?.author && (
-          <p className="text-xs text-ink-muted">{product.book_detail.author}</p>
+      <div className="flex flex-1 flex-col p-2.5">
+        <p className="text-sm font-bold text-ink">{formatRupiah(product.price)}</p>
+        <p className="mt-0.5 line-clamp-2 text-xs leading-snug text-ink-muted">{product.name}</p>
+        {product.category && (
+          <p className="mt-auto pt-1 text-[11px] text-ink-muted/70">{product.category.name}</p>
         )}
         {product.type !== 'ebook' && product.stock === 0 && (
-          <p className="text-xs font-medium text-red-600">Stok habis</p>
+          <p className="mt-1 text-[11px] font-medium text-red-600">Stok habis</p>
         )}
-        <p className="mt-auto pt-2 font-semibold text-orange-dark">{formatRupiah(product.price)}</p>
       </div>
     </Link>
   )

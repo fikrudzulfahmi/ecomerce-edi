@@ -1,30 +1,11 @@
 import { Link } from 'react-router-dom'
-import {
-  Backpack,
-  BookMarked,
-  BookOpen,
-  Download,
-  Gift,
-  GraduationCap,
-  Heart,
-  PenTool,
-  ShieldCheck,
-  Truck,
-  Wallet,
-} from 'lucide-react'
+import { Backpack, BookMarked, BookOpen, Gift, GraduationCap, Heart, PenTool } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { Container } from '../components/layout/Container'
 import { ProductCard } from '../components/product/ProductCard'
 import { ProductCardSkeleton, Skeleton } from '../components/ui/Skeleton'
 import { useCategories, useProducts } from '../api/hooks'
 import type { Product } from '../lib/types'
-
-const FEATURES: { icon: LucideIcon; label: string }[] = [
-  { icon: Truck, label: 'Kirim Mengantar' },
-  { icon: Download, label: 'E-book instan' },
-  { icon: ShieldCheck, label: 'Pembayaran aman' },
-  { icon: Wallet, label: 'COD tersedia' },
-]
 
 function categoryIcon(slug: string): LucideIcon {
   if (slug.includes('tulis')) return PenTool
@@ -45,18 +26,18 @@ interface ProductSectionProps {
 
 function ProductSection({ title, products, loading, linkTo }: ProductSectionProps) {
   return (
-    <section className="mt-12">
+    <section className="mt-8">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">{title}</h2>
+        <h2 className="text-lg font-bold">{title}</h2>
         {linkTo && (
           <Link to={linkTo} className="text-sm font-semibold text-navy hover:underline">
             Lihat semua
           </Link>
         )}
       </div>
-      <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+      <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
         {loading
-          ? Array.from({ length: 8 }).map((_, i) => <ProductCardSkeleton key={i} />)
+          ? Array.from({ length: 5 }).map((_, i) => <ProductCardSkeleton key={i} />)
           : products?.map((product) => <ProductCard key={product.id} product={product} />)}
       </div>
     </section>
@@ -65,76 +46,57 @@ function ProductSection({ title, products, loading, linkTo }: ProductSectionProp
 
 export function Home() {
   const { data: categories, isLoading: loadingCategories } = useCategories()
-  const { data: latest, isLoading: loadingLatest } = useProducts({ sort: 'latest', per_page: 8 })
+  const { data: latest, isLoading: loadingLatest } = useProducts({ sort: 'latest', per_page: 10 })
   const { data: books, isLoading: loadingBooks } = useProducts({
     type: 'book',
     sort: 'latest',
-    per_page: 8,
+    per_page: 10,
   })
 
   return (
     <div>
-      <section className="relative overflow-hidden bg-navy text-cream">
-        {/* Ornamen dekoratif */}
-        <BookOpen className="pointer-events-none absolute -left-8 top-12 h-32 w-32 -rotate-12 text-cream/10 md:h-48 md:w-48" />
-        <PenTool className="pointer-events-none absolute -right-10 top-8 h-28 w-28 rotate-12 text-cream/10 md:h-44 md:w-44" />
-        <Gift className="pointer-events-none absolute bottom-10 left-[8%] h-20 w-20 -rotate-6 text-orange/20 md:h-32 md:w-32" />
-        <GraduationCap className="pointer-events-none absolute bottom-12 right-[9%] h-20 w-20 rotate-6 text-cream/10 md:h-32 md:w-32" />
-        <BookMarked className="pointer-events-none absolute left-[46%] top-6 h-10 w-10 -rotate-12 text-orange/15 md:h-16 md:w-16" />
-        <Backpack className="pointer-events-none absolute bottom-4 left-[46%] hidden h-12 w-12 rotate-12 text-cream/10 md:block" />
-
-        <Container className="relative py-16 text-center md:py-24">
-          <h1 className="text-3xl font-bold text-cream md:text-5xl">Temukan Buku Favoritmu</h1>
-          <p className="mx-auto mt-4 max-w-xl text-cream/80">
-            Novel, buku agama, referensi, alat tulis, dan merchandise — semua di satu tempat.
-          </p>
-          <Link
-            to="/products"
-            className="mt-8 inline-block rounded-md bg-orange px-6 py-3 font-semibold text-navy-dark transition hover:bg-orange-dark"
-          >
-            Jelajahi Katalog
-          </Link>
-
-          <div className="mx-auto mt-10 flex max-w-2xl flex-wrap items-center justify-center gap-3">
-            {FEATURES.map(({ icon: Icon, label }) => (
-              <span
-                key={label}
-                className="flex items-center gap-2 rounded-full border border-cream/20 bg-cream/5 px-4 py-2 text-sm text-cream/90"
-              >
-                <Icon className="h-4 w-4 text-orange" />
-                {label}
-              </span>
-            ))}
-          </div>
-        </Container>
-      </section>
-
-      <Container className="py-12">
-        <section>
-          <h2 className="text-2xl font-bold">Kategori</h2>
-          <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <Container className="py-6">
+        {/* Kategori chips (ala Tokopedia) */}
+        <section className="overflow-x-auto">
+          <div className="flex gap-6 py-1">
             {loadingCategories
-              ? Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-32" />)
+              ? Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-20 w-20 shrink-0 rounded-full" />)
               : categories?.map((cat) => {
                   const Icon = categoryIcon(cat.slug)
                   return (
                     <Link
                       key={cat.id}
                       to={`/products?category=${cat.slug}`}
-                      className="group flex flex-col items-center gap-3 rounded-2xl border border-cream-darker/60 bg-white/80 p-6 text-center shadow-card backdrop-blur-sm transition hover:-translate-y-1 hover:border-navy/30 hover:shadow-glow"
+                      className="flex w-20 shrink-0 flex-col items-center gap-2 text-center"
                     >
-                      <span className="flex h-14 w-14 items-center justify-center rounded-full bg-navy/10 text-navy transition group-hover:bg-navy group-hover:text-cream">
+                      <span className="flex h-14 w-14 items-center justify-center rounded-full bg-white text-navy shadow-card transition group-hover:bg-navy">
                         <Icon className="h-6 w-6" />
                       </span>
-                      <span className="font-semibold text-navy">{cat.name}</span>
-                      {cat.children && cat.children.length > 0 && (
-                        <span className="text-xs leading-relaxed text-ink-muted">
-                          {cat.children.map((c) => c.name).join(' · ')}
-                        </span>
-                      )}
+                      <span className="text-xs font-medium text-ink">{cat.name}</span>
                     </Link>
                   )
                 })}
+          </div>
+        </section>
+
+        {/* Banner promo */}
+        <section className="relative mt-6 overflow-hidden rounded-xl bg-navy text-white">
+          <BookOpen className="pointer-events-none absolute -left-6 top-8 h-32 w-32 -rotate-12 text-white/10" />
+          <PenTool className="pointer-events-none absolute -right-8 top-4 h-28 w-28 rotate-12 text-white/10" />
+          <Gift className="pointer-events-none absolute bottom-6 right-[18%] h-16 w-16 -rotate-6 text-orange/30" />
+          <Backpack className="pointer-events-none absolute bottom-4 left-1/2 hidden h-12 w-12 rotate-12 text-white/10 md:block" />
+
+          <div className="relative px-6 py-10 md:px-14 md:py-16">
+            <h1 className="text-2xl font-bold md:text-4xl">Temukan Buku Favoritmu</h1>
+            <p className="mt-2 max-w-lg text-sm text-white/80 md:text-base">
+              Novel, buku agama, referensi, alat tulis, dan merchandise — semua di satu tempat.
+            </p>
+            <Link
+              to="/products"
+              className="mt-6 inline-block rounded-full bg-orange px-6 py-2.5 font-semibold text-white transition hover:bg-orange-dark"
+            >
+              Jelajahi Katalog
+            </Link>
           </div>
         </section>
 

@@ -12,8 +12,8 @@ const base =
   'inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-navy focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60'
 
 const variants: Record<Variant, string> = {
-  primary: 'bg-orange text-navy-dark shadow-sm shadow-orange/30 hover:bg-orange-dark hover:shadow-md',
-  secondary: 'bg-navy text-cream shadow-sm shadow-navy/30 hover:bg-navy-dark hover:shadow-md',
+  primary: 'bg-navy text-white shadow-sm shadow-navy/30 hover:bg-navy-dark hover:shadow-md',
+  secondary: 'bg-orange text-white shadow-sm shadow-orange/30 hover:bg-orange-dark hover:shadow-md',
   ghost: 'bg-transparent text-navy hover:bg-cream-dark',
   danger: 'bg-red-600 text-white hover:bg-red-700',
 }

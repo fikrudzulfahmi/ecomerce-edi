@@ -111,7 +111,7 @@ export function ProductDetail() {
             )}
           </div>
 
-          <p className="text-3xl font-bold text-orange-dark">{formatRupiah(product.price)}</p>
+          <p className="text-3xl font-bold text-navy">{formatRupiah(product.price)}</p>
 
           {details.length > 0 && (
             <div className="rounded-lg border border-cream-darker bg-white p-4 text-sm">
