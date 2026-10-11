@@ -1,144 +1,119 @@
-# Deploy Edi's Journal Store — cPanel (Dewaweb)
+# Deploy Edi's Journal Store — Git + GitHub Actions (cPanel Dewaweb)
 
-Alur deploy **manual** untuk monorepo Laravel (API) + Vite SPA. Dua subdomain:
+Push ke `main` → otomatis deploy API (git pull + composer + migrate) dan SPA (build + upload dist).
+Kamu hanya perlu: **buat subdomain, database, edit `.env`, dan `git clone` sekali**. Sisanya Actions.
 
-- **API**  : `https://api-store.edisjournal.my.id`  → Laravel (`backend/public`)
-- **SPA**  : `https://store.edisjournal.my.id`      → build statis (`frontend/dist`)
-
----
-
-## A. Build frontend (di laptop)
-
-1. Buat file **`frontend/.env.production`** berisi:
-
-   ```env
-   VITE_API_BASE_URL=https://api-store.edisjournal.my.id
-   ```
-
-2. Build:
-
-   ```bash
-   cd frontend
-   npm install
-   npm run build
-   ```
-
-   Hasil: folder **`frontend/dist/`** (sudah termasuk `.htaccess` untuk SPA).
+- **API** : `https://api-store.edisjournal.my.id` → docroot `<repo>/backend/public`
+- **SPA** : `https://store.edisjournal.my.id` → docroot berisi `dist/`
 
 ---
 
-## B. Buat 2 subdomain di cPanel
+## 0. Gabungkan dulu ke `main`
 
-3. **cPanel → Domains → Create A New Domain** (dua kali):
-   - **Domain** = `edisjournal.my.id`, **Subdomain** = `api-store`
-   - **Domain** = `edisjournal.my.id`, **Subdomain** = `store`
+Deploy dipicu dari branch **`main`**. Fitur terkini masih di `feature-ebook`, jadi gabungkan dulu:
 
-   > Kalau cPanel-mu pakai menu **Subdomains**, pilih domain induk `edisjournal.my.id`
-   > lalu isi kolom Subdomain hanya `api-store` (tanpa titik) dan `store`.
-
----
-
-## C. Upload backend (API)
-
-4. **File Manager** → folder `home` → buat folder baru `api-store`.
-5. Upload repo backend ke situ. Paling gampang:
-   - ZIP folder `backend/` dari laptop → upload → **Extract**, sehingga isinya
-     `~/api-store/app/`, `~/api-store/public/`, `~/api-store/routes/`, dst.
-   - *atau* lewat **Terminal**: `git clone https://github.com/fikrudzulfahmi/ecomerce-edi.git`
-     lalu pakai folder `ecomerce-edi/backend` sebagai root API.
-
-6. **Set Document Root** subdomain `api-store`:
-   - cPanel → **Domains → api-store.edisjournal.my.id → Manage → Document Root**
-   - arahkan ke folder **`public`** di dalam backend, contoh: `/home/USER/api-store/public`
-     (atau `/home/USER/ecomerce-edi/backend/public` kalau pakai git clone).
-
-   > ⚠️ Ini langkah paling sering salah: docroot harus berakhiran **`/public`**.
-
-7. **Buat `.env`** di folder backend (salin dari `.env.example`), lalu isi:
-   - `APP_KEY=` → biarkan kosong dulu (di-generate nanti).
-   - `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD` → buat dulu di **cPanel → MySQL Databases** + tambahkan user.
-   - `ADMIN_EMAIL`, `ADMIN_PASSWORD` → kredensial login adminmu.
-   - `MENGANTAR_API_KEY`, `MENGANTAR_ORIGIN_ID`, dst → dari dashboard Mengantar.
-   - `MAIL_*` → SMTP untuk email lupa password (isi belakangan boleh).
+```bash
+git checkout main
+git merge feature-ebook
+git push origin main
+```
 
 ---
 
-## D. Setup backend lewat Terminal (SSH cPanel)
+## 1. Sekali saja — setup server di cPanel
 
-8. **cPanel → Terminal** (atau SSH), lalu:
+### 1a. Aktifkan SSH
+cPanel → **Security → SSH Access → Manage → Enable SSH**.
 
-   ```bash
-   cd ~/api-store
-   composer install --no-dev --no-scripts
-   php artisan package:discover
-   php artisan key:generate
-   php artisan migrate --force
-   php artisan db:seed --class=ProductionSeeder
-   php artisan config:clear && php artisan config:cache
-   ```
+### 1b. Buat 2 subdomain
+cPanel → **Domains → Create A New Domain** (dua kali):
+- Domain `edisjournal.my.id`, Subdomain `api-store`
+- Domain `edisjournal.my.id`, Subdomain `store`
 
-   Catatan:
-   - `--no-scripts` + `package:discover` manual dipakai karena hosting Dewaweb menonaktifkan
-     beberapa fungsi (symlink/exec/escapeshellarg).
-   - Seeder pakai **`ProductionSeeder`** → hanya membuat **akun admin**, tanpa data contoh.
-   - Kalau `config:cache` sudah pernah jalan, jalankan `php artisan config:clear` **dulu**
-     sebelum seeder agar `ADMIN_*` di `.env` terbaca.
+### 1c. Buat database
+cPanel → **MySQL Databases** → buat DB + user, catat nama/user/password (untuk `.env`).
 
-9. **Cron** (agar pesanan tak terbayar otomatis kedaluwarsa tiap 5 menit):
-   - **cPanel → Cron Jobs** → tambah (setiap menit):
+### 1d. Clone repo (lewat Terminal cPanel)
+```bash
+cd ~
+git clone https://github.com/fikrudzulfahmi/ecomerce-edi.git
+```
 
-     ```
-     * * * * * /usr/local/bin/php /home/USER/api-store/artisan schedule:run >> /dev/null 2>&1
-     ```
+### 1e. Set Document Root
+- cPanel → **Domains → api-store… → Manage → Document Root** → `.../ecomerce-edi/backend/public`
+- cPanel → **Domains → store… → Manage → Document Root** → `/home/USER/store`
 
----
+### 1f. Buat `.env` backend
+```bash
+cd ~/ecomerce-edi/backend
+cp .env.example .env
+nano .env   # isi DB, ADMIN_EMAIL, ADMIN_PASSWORD, MENGANTAR_API_KEY, MAIL_*
+```
 
-## E. Upload frontend (SPA)
-
-10. **File Manager** → folder `home` → buat folder `store`.
-11. Upload **seluruh isi `frontend/dist/`** (termasuk `.htaccess`) ke `~/store/`.
-
-    > Jangan upload folder `dist`-nya, tapi **isinya** (ada `index.html` + `assets/` + `.htaccess`).
-
-12. **Set Document Root** subdomain `store` → `/home/USER/store`.
-
----
-
-## F. SSL
-
-13. **cPanel → SSL/TLS Status → Run AutoSSL** untuk kedua subdomain.
+### 1g. Buat SSH deploy key
+```bash
+ssh-keygen -t ed25519 -f ~/.ssh/deploy -N ""
+cat ~/.ssh/deploy.pub >> ~/.ssh/authorized_keys
+chmod 600 ~/.ssh/authorized_keys
+chmod 700 ~/.ssh && chmod g-w,o-w ~
+cat ~/.ssh/deploy | base64 -w0 && echo   # salin outputnya untuk secret SSH_KEY
+```
 
 ---
 
-## G. Verifikasi
+## 2. Isi GitHub Secrets
 
-14. Buka `https://store.edisjournal.my.id` → beranda tampil.
-15. Cek API hidup: `https://api-store.edisjournal.my.id/` → JSON `{"app":"Edi's Journal Store","status":"ok",...}`.
-16. Login admin di `https://store.edisjournal.my.id/login` → masuk, klik menu **Admin** → isi produk/kategori/voucher/banner.
+GitHub repo → **Settings → Secrets and variables → Actions → New repository secret**
+(form cuma 2 kolom; isi **satu per satu**):
 
----
-
-## H. Google OAuth (SETELAH deploy)
-
-17. Buat kredensial di **Google Cloud Console** (lihat `docs/GOOGLE-OAUTH.md` setelah siap), lalu isi di `.env`:
-
-    ```
-    GOOGLE_CLIENT_ID=...
-    GOOGLE_CLIENT_SECRET=...
-    GOOGLE_REDIRECT_URI=https://api-store.edisjournal.my.id/api/v1/auth/google/callback
-    ```
-
-18. `php artisan config:clear && php artisan config:cache`, lalu tes tombol "Lanjut dengan Google".
+| Secret | Nilai |
+|--------|-------|
+| `SSH_HOST` | IP/hostname server Dewaweb |
+| `SSH_USER` | username cPanel (mis. `u1002786`) |
+| `SSH_KEY` | isi private key (hasil base64 di 1g) |
+| `SSH_PORT` | `65002` (port SSH Dewaweb; kalau 22 isi `22`) |
+| `DEPLOY_PATH` | `/home/USER/ecomerce-edi` (folder hasil git clone) |
+| `DEPLOY_PATH_SPA` | `/home/USER/store` (document root SPA) |
+| `VITE_API_BASE_URL` | `https://api-store.edisjournal.my.id` |
 
 ---
 
-## Troubleshooting cepat
+## 3. Deploy pertama (reset DB + seeder admin)
 
-| Gejala | Kemungkinan | Cek |
-|--------|-------------|-----|
-| API 404 semua `/api/...` | docroot salah (bukan `.../public`) | Domains → Manage → Document Root |
-| API 500 | `.env` DB salah / belum migrate | baca pesan error / `php artisan migrate:status` |
-| SPA refresh `/produk/x` 404 | `.htaccess` tidak ter-upload | pastikan `dist/.htaccess` ada di server |
-| Gambar/API beda host | `VITE_API_BASE_URL` salah saat build | rebuild frontend |
-| Login admin gagal | `ADMIN_*` belum diisi saat seed | isi `.env` → `config:clear` → seed ulang |
-| CORS error | `FRONTEND_URL` tidak cocok | set `FRONTEND_URL=https://store.edisjournal.my.id` |
+1. Buka tab **Actions** → workflow **Deploy API (Laravel)** → **Run workflow** → centang **fresh** → Run.
+2. (SPA otomatis ter-deploy saat push, atau Run manual **Deploy SPA**.)
+
+> `fresh` menjalankan `migrate:fresh` + `ProductionSeeder` → **hanya akun admin**.
+> Setelah itu biarkan off; deploy berikutnya cukup `migrate --force`.
+
+---
+
+## 4. Verifikasi
+
+- API: `https://api-store.edisjournal.my.id/` → JSON `{"app":"Edi's Journal Store","status":"ok"}`
+- SPA: `https://store.edisjournal.my.id/` → beranda tampil.
+- Login admin → isi produk/kategori/voucher/banner.
+
+---
+
+## 5. Google OAuth (setelah deploy)
+
+Isi `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI` di `.env` server,
+lalu re-run workflow **Deploy API** (untuk `config:cache` ulang) atau jalankan manual:
+`php artisan config:clear && php artisan config:cache`.
+
+---
+
+## Troubleshooting
+
+Baca tab **Annotations** (bukan log) — workflow sudah menulis penyebab gagalnya di sana.
+
+| Gejala | Penyebab umum |
+|--------|---------------|
+| Run merah "Secret kosong" | secret belum diisi (lihat §2) |
+| `git pull` gagal | folder server bukan hasil clone / branch bukan main |
+| `composer install` gagal | composer tidak ada → pastikan `composer` atau `~/composer.phar` |
+| migrate 1050 (tabel sudah ada) | migrasi setengah jalan → Run dengan **fresh** |
+| API 404 semua | Document Root belum `.../backend/public` |
+| SPA refresh `/produk/x` 404 | `.htaccess` tidak ter-upload |
+| Frontend panggil API salah | `VITE_API_BASE_URL` salah → rebuild |

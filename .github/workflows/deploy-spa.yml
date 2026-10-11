@@ -1,0 +1,65 @@
+name: Deploy SPA (Vite)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/deploy-spa.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-spa
+  cancel-in-progress: false
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Cek secret wajib
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_KEY: ${{ secrets.SSH_KEY }}
+          DEPLOY_PATH_SPA: ${{ secrets.DEPLOY_PATH_SPA }}
+          VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
+        run: |
+          gagal=0
+          for s in SSH_HOST SSH_USER SSH_KEY DEPLOY_PATH_SPA VITE_API_BASE_URL; do
+            if [ -z "${!s}" ]; then echo "::error::Secret '$s' kosong — isi di Settings → Secrets and variables → Actions"; gagal=1; fi
+          done
+          exit $gagal
+
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Build
+        working-directory: frontend
+        env:
+          VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
+        run: |
+          set -e
+          npm ci
+          npm run build
+          if [ ! -f dist/.htaccess ]; then
+            echo "::error::dist/.htaccess hilang — deep link (/produk/x) akan 404 saat refresh. Pastikan frontend/public/.htaccess ada."
+            exit 1
+          fi
+
+      - name: Upload dist ke document root SPA
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT || '22' }}
+          source: 'frontend/dist'
+          target: ${{ secrets.DEPLOY_PATH_SPA }}
+          strip_components: 2
+          overwrite: true
