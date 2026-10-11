@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { forgotPassword } from '../api/auth'
+import { extractErrorMessage } from '../lib/errors'
 import { AuthCard } from '../components/layout/AuthCard'
 import { Alert } from '../components/ui/Alert'
 import { Button } from '../components/ui/Button'
@@ -30,8 +31,8 @@ export function ForgotPassword() {
     try {
       await forgotPassword(values.email)
       setSent(true)
-    } catch {
-      setError('Gagal mengirim link reset. Pastikan email sudah terdaftar.')
+    } catch (error) {
+      setError(extractErrorMessage(error))
     }
   })
 
