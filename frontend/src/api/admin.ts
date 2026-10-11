@@ -26,6 +26,7 @@ export interface ProductInput {
   category_id: number
   type: 'book' | 'other' | 'ebook' | 'bundle'
   price: number
+  discount_percent?: number
   weight_gram?: number
   stock?: number
   status?: 'active' | 'inactive'

@@ -6,6 +6,7 @@ namespace Tests\Feature;
 
 use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
+use App\Enums\ProductType;
 use App\Enums\Role;
 use App\Models\Order;
 use App\Models\Product;
@@ -122,6 +123,25 @@ class RatingChatTest extends TestCase
         $this->getJson("/api/v1/chat/conversations/{$conversation['id']}/messages")
             ->assertOk()
             ->assertJsonCount(3, 'data');
+    }
+
+    public function test_checkout_uses_discounted_sale_price(): void
+    {
+        $user = User::factory()->create(['email_verified_at' => now()]);
+        $ebook = Product::factory()->create([
+            'type' => ProductType::Ebook,
+            'price' => 100000,
+            'discount_percent' => 20,
+            'stock' => 0,
+        ]);
+        Sanctum::actingAs($user);
+
+        $this->postJson('/api/v1/cart/items', ['product_id' => $ebook->id, 'qty' => 2])->assertCreated();
+
+        $this->postJson('/api/v1/checkout', ['payment_method' => 'gdc'])
+            ->assertCreated()
+            ->assertJsonPath('data.subtotal', 160000)
+            ->assertJsonPath('data.total', 160000);
     }
 
     public function test_banner_crud_and_public_listing(): void

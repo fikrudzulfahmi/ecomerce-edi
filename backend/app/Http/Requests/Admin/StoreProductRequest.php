@@ -20,6 +20,7 @@ class StoreProductRequest extends FormRequest
             'category_id' => ['required', 'integer', 'exists:categories,id'],
             'type' => ['required', 'in:book,other,ebook,bundle'],
             'price' => ['required', 'integer', 'min:0'],
+            'discount_percent' => ['nullable', 'integer', 'min:0', 'max:99'],
             'weight_gram' => ['nullable', 'integer', 'min:0'],
             'stock' => ['nullable', 'integer', 'min:0'],
             'status' => ['nullable', 'in:active,inactive'],

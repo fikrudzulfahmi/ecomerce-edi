@@ -16,7 +16,7 @@ class CartResource extends JsonResource
         return [
             'id' => $this->id,
             'items' => CartItemResource::collection($items),
-            'subtotal' => $items->sum(fn ($item) => $item->qty * $item->product->price),
+            'subtotal' => $items->sum(fn ($item) => $item->qty * $item->product->sale_price),
             'total_items' => $items->sum('qty'),
         ];
     }

@@ -20,6 +20,7 @@ class UpdateProductRequest extends FormRequest
             'category_id' => ['sometimes', 'required', 'integer', 'exists:categories,id'],
             'type' => ['sometimes', 'required', 'in:book,other,ebook,bundle'],
             'price' => ['sometimes', 'required', 'integer', 'min:0'],
+            'discount_percent' => ['sometimes', 'integer', 'min:0', 'max:99'],
             'weight_gram' => ['sometimes', 'integer', 'min:0'],
             'stock' => ['sometimes', 'integer', 'min:0'],
             'status' => ['sometimes', 'in:active,inactive'],

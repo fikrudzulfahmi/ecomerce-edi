@@ -75,8 +75,13 @@ export function Cart() {
                 {item.product.book_detail?.author && (
                   <p className="text-xs text-ink-muted">{item.product.book_detail.author}</p>
                 )}
-                <p className="mt-1 text-sm font-semibold text-orange-dark">
-                  {formatRupiah(item.product.price)}
+                <p className="mt-1 flex items-center gap-2 text-sm font-semibold text-orange-dark">
+                  {formatRupiah(item.product.sale_price)}
+                  {item.product.discount_percent > 0 && (
+                    <span className="text-xs font-normal text-ink-muted line-through">
+                      {formatRupiah(item.product.price)}
+                    </span>
+                  )}
                 </p>
 
                 <div className="mt-auto flex items-center justify-between pt-2">

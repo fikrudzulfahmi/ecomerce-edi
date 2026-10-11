@@ -55,6 +55,9 @@ export interface Product {
   bundle_physical_id: number | null
   rating_avg: number
   rating_count: number
+  discount_percent: number
+  sale_price: number
+  sold_count: number
   created_at: string
 }
 

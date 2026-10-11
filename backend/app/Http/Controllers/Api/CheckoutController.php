@@ -61,7 +61,7 @@ class CheckoutController
         }
 
         $hasPhysical = $items->contains(fn ($item) => ! $item->product->isEbook());
-        $subtotal = $items->sum(fn ($item) => $item->qty * $item->product->price);
+        $subtotal = $items->sum(fn ($item) => $item->qty * $item->product->sale_price);
 
         if ($hasPhysical) {
             $addressId = $request->integer('address_id');
@@ -126,7 +126,7 @@ class CheckoutController
         $user = $request->user();
         $cart = $user->cart()->with('items.product')->first();
         $items = $cart?->items ?? collect();
-        $subtotal = $items->sum(fn ($item) => $item->qty * $item->product->price);
+        $subtotal = $items->sum(fn ($item) => $item->qty * $item->product->sale_price);
         $shippingCost = (int) ($request->input('shipping_cost') ?? 0);
 
         $voucher = $this->vouchers->validate((string) $request->input('voucher_code'), $subtotal);

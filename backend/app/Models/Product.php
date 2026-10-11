@@ -32,6 +32,8 @@ class Product extends Model
         'bundle_physical_id',
         'rating_avg',
         'rating_count',
+        'discount_percent',
+        'sold_count',
     ];
 
     protected function casts(): array
@@ -44,6 +46,8 @@ class Product extends Model
             'images' => 'array',
             'rating_avg' => 'float',
             'rating_count' => 'integer',
+            'discount_percent' => 'integer',
+            'sold_count' => 'integer',
         ];
     }
 
@@ -70,6 +74,15 @@ class Product extends Model
     public function reviews(): HasMany
     {
         return $this->hasMany(Review::class);
+    }
+
+    public function getSalePriceAttribute(): int
+    {
+        if (($this->discount_percent ?? 0) > 0) {
+            return (int) round($this->price * (100 - $this->discount_percent) / 100);
+        }
+
+        return $this->price;
     }
 
     public function isEbook(): bool

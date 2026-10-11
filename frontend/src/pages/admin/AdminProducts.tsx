@@ -140,6 +140,7 @@ function ProductForm({
   const [categoryId, setCategoryId] = useState(product?.category?.id ?? categories[0]?.id ?? '')
   const [type, setType] = useState<ProductType>(product?.type ?? 'book')
   const [price, setPrice] = useState(product ? String(product.price) : '')
+  const [discount, setDiscount] = useState(product ? String(product.discount_percent) : '0')
   const [stock, setStock] = useState(product ? String(product.stock) : '0')
   const [weight, setWeight] = useState(product ? String(product.weight_gram) : '0')
   const [status, setStatus] = useState<'active' | 'inactive'>(product?.status === 'inactive' ? 'inactive' : 'active')
@@ -181,6 +182,7 @@ function ProductForm({
         category_id: Number(categoryId),
         type,
         price: Number(price),
+        discount_percent: Number(discount) || 0,
         stock: Number(stock) || 0,
         weight_gram: Number(weight) || 0,
         status,
@@ -238,6 +240,17 @@ function ProductForm({
         <div>
           <label className={label}>Harga (Rp)</label>
           <input className={field} type="number" value={price} onChange={(e) => setPrice(e.target.value)} />
+        </div>
+        <div>
+          <label className={label}>Diskon (%)</label>
+          <input
+            className={field}
+            type="number"
+            min={0}
+            max={99}
+            value={discount}
+            onChange={(e) => setDiscount(e.target.value)}
+          />
         </div>
         <div>
           <label className={label}>Stok</label>

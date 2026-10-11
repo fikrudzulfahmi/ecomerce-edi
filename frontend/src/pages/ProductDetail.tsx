@@ -119,7 +119,19 @@ export function ProductDetail() {
             )}
           </div>
 
-          <p className="text-3xl font-bold text-navy">{formatRupiah(product.price)}</p>
+          <div className="flex items-baseline gap-3">
+            <p className="text-3xl font-bold text-navy">{formatRupiah(product.sale_price)}</p>
+            {product.discount_percent > 0 && (
+              <>
+                <span className="text-lg text-ink-muted line-through">
+                  {formatRupiah(product.price)}
+                </span>
+                <span className="rounded-md bg-red-100 px-2 py-0.5 text-sm font-bold text-red-600">
+                  -{product.discount_percent}%
+                </span>
+              </>
+            )}
+          </div>
 
           {product.rating_count > 0 && (
             <div className="flex items-center gap-2">

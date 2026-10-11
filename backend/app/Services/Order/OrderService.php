@@ -67,14 +67,16 @@ class OrderService
                     throw new BusinessException("Stok '{$product->name}' tidak mencukupi.");
                 }
 
-                $subtotal += $item->qty * $product->price;
+                $subtotal += $item->qty * $product->sale_price;
 
                 $orderItems[] = [
                     'product_id' => $product->id,
                     'name_snapshot' => $product->name,
-                    'price_snapshot' => $product->price,
+                    'price_snapshot' => $product->sale_price,
                     'qty' => $item->qty,
                 ];
+
+                $product->increment('sold_count', $item->qty);
 
                 if (! $product->isEbook()) {
                     $stockItems[] = ['product_id' => $product->id, 'qty' => $item->qty];

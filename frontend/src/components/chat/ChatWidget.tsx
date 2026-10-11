@@ -15,15 +15,28 @@ export function ChatWidget() {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [text, setText] = useState('')
   const [subject, setSubject] = useState('')
+  const [totalUnread, setTotalUnread] = useState(0)
   const bottomRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    if (!open) return
-    fetchConversations().then((list) => {
-      setConversations(list)
-      if (list.length > 0) setActiveId(list[0].id)
-    })
-  }, [open])
+    const load = () =>
+      fetchConversations().then((list) => {
+        setConversations(list)
+        setTotalUnread(list.reduce((n, c) => n + (c.unread ?? 0), 0))
+      })
+    load()
+    const t = setInterval(load, 15000)
+    return () => clearInterval(t)
+  }, [])
+
+  const toggleOpen = () => {
+    if (!open) {
+      setOpen(true)
+      if (activeId === null && conversations.length > 0) setActiveId(conversations[0].id)
+    } else {
+      setOpen(false)
+    }
+  }
 
   useEffect(() => {
     if (!activeId) return
@@ -54,11 +67,16 @@ export function ChatWidget() {
   return (
     <>
       <button
-        onClick={() => setOpen((v) => !v)}
+        onClick={toggleOpen}
         className="fixed bottom-5 right-5 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-navy text-white shadow-glow transition hover:bg-navy-dark"
         aria-label="Chat toko"
       >
         {open ? <X className="h-6 w-6" /> : <MessageCircle className="h-6 w-6" />}
+        {!open && totalUnread > 0 && (
+          <span className="absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-orange px-1 text-[11px] font-bold text-white">
+            {totalUnread}
+          </span>
+        )}
       </button>
 
       {open && (
