@@ -1,0 +1,106 @@
+name: Deploy API (Laravel)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/deploy-api.yml'
+  workflow_dispatch:
+    inputs:
+      fresh:
+        description: 'Reset database (migrate:fresh) + seed admin. Centang hanya untuk instalasi pertama.'
+        type: boolean
+        default: false
+
+concurrency:
+  group: deploy-api
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+
+    steps:
+      - name: Cek secret wajib
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_KEY: ${{ secrets.SSH_KEY }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+        run: |
+          gagal=0
+          for s in SSH_HOST SSH_USER SSH_KEY DEPLOY_PATH; do
+            if [ -z "${!s}" ]; then echo "::error::Secret '$s' kosong — isi di Settings → Secrets and variables → Actions"; gagal=1; fi
+          done
+          exit $gagal
+
+      - name: Git pull + composer + migrate (SSH)
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT || '22' }}
+          envs: DEPLOY_PATH
+          script: |
+            set -e
+            cd "$DEPLOY_PATH"
+
+            fase() {
+              label="$1"; shift
+              log=/tmp/fase.deploy.log
+              if "$@" >"$log" 2>&1; then
+                echo "-- $label: OK"; tail -2 "$log"
+              else
+                echo "::error title=GAGAL: $label::$(tail -c 400 "$log" | tr '\n' ' ')"
+                exit 1
+              fi
+            }
+
+            fase "git pull" git pull origin main
+            cd backend
+
+            # Dewaweb menonaktifkan symlink/exec/escapeshellarg → --no-scripts + package:discover manual
+            if command -v composer >/dev/null 2>&1; then
+              fase "composer install" composer install --no-dev --no-scripts --no-interaction
+            else
+              fase "composer install" php "$HOME/composer.phar" install --no-dev --no-scripts --no-interaction
+            fi
+            fase "package:discover" php artisan package:discover
+
+            php artisan config:clear >/dev/null 2>&1 || true
+
+            if [ "${{ github.event.inputs.fresh }}" = "true" ]; then
+              echo "== FRESH MODE: reset database =="
+              fase "migrate:fresh" php artisan migrate:fresh --force
+              fase "seed admin" php artisan db:seed --class=ProductionSeeder --force
+            else
+              fase "migrate" php artisan migrate --force
+            fi
+
+            fase "config:cache" php artisan config:cache
+            fase "route:cache" php artisan route:cache
+            fase "view:cache" php artisan view:cache
+            php artisan storage:link 2>/dev/null || true
+
+            echo "OK: deploy API selesai"
+
+      - name: Diagnostik (hanya saat gagal)
+        if: failure()
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT || '22' }}
+          envs: DEPLOY_PATH
+          script: |
+            echo "::warning title=P1 FOLDER::$([ -d "$DEPLOY_PATH" ] && echo "ada ($(ls -a "$DEPLOY_PATH" | head -10 | tr '\n' ' '))" || echo "TIDAK ADA — cek secret DEPLOY_PATH")"
+            echo "::warning title=P2 ARTISAN::$([ -f "$DEPLOY_PATH/backend/artisan" ] && echo ada || echo TIDAK ADA)"
+            echo "::warning title=P3 ENV::$([ -f "$DEPLOY_PATH/backend/.env" ] && echo ada || echo "TIDAK ADA — salin .env.example → .env")"
+            echo "::warning title=P4 PHP::$(php -v 2>/dev/null | head -1 || echo 'php tidak ditemukan di PATH')"
+            echo "::warning title=P5 COMPOSER::$(command -v composer 2>/dev/null || echo "tidak di PATH; ~/composer.phar: $([ -f "$HOME/composer.phar" ] && echo ada || echo tidak)")"
+            exit 0
