@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Download, MapPin, Truck, Wallet } from 'lucide-react'
+import { Download, MapPin, Ticket, Truck, Wallet } from 'lucide-react'
 import { useAddresses, useCart, useCheckout, useShippingOptions } from '../api/hooks'
+import { fetchCheckoutMeta, previewVoucher, type VoucherPreview } from '../api/checkout'
 import { formatRupiah } from '../lib/format'
 import { extractErrorMessage } from '../lib/errors'
 import { useAuthStore } from '../store/auth'
@@ -23,6 +24,11 @@ export function Checkout() {
   const [shipping, setShipping] = useState<string | null>(null)
   const [method, setMethod] = useState<PaymentMethodType>('gdc')
   const [error, setError] = useState<string | null>(null)
+  const [voucherCode, setVoucherCode] = useState('')
+  const [voucherPreview, setVoucherPreview] = useState<VoucherPreview | null>(null)
+  const [voucherError, setVoucherError] = useState<string | null>(null)
+  const [applyingVoucher, setApplyingVoucher] = useState(false)
+  const [handlingFee, setHandlingFee] = useState(0)
 
   const hasPhysical = cart ? cart.items.some((item) => item.product.type !== 'ebook') : true
 
@@ -35,6 +41,28 @@ export function Checkout() {
   const { data: shippingOptions, isLoading: loadingShipping } = useShippingOptions(
     hasPhysical ? selectedAddress?.id ?? null : null,
   )
+
+  useEffect(() => {
+    fetchCheckoutMeta()
+      .then((m) => setHandlingFee(m.handling_fee))
+      .catch(() => {})
+  }, [])
+
+  const applyVoucher = async () => {
+    const code = voucherCode.trim()
+    if (!code) return
+    setApplyingVoucher(true)
+    setVoucherError(null)
+    try {
+      const preview = await previewVoucher(code, selectedShipping?.cost ?? 0)
+      setVoucherPreview(preview)
+    } catch (err) {
+      setVoucherPreview(null)
+      setVoucherError(extractErrorMessage(err))
+    } finally {
+      setApplyingVoucher(false)
+    }
+  }
 
   if (loadingCart || loadingAddresses) {
     return (
@@ -58,7 +86,8 @@ export function Checkout() {
   const notVerified = !!user && !user.email_verified_at
   const selectedShipping =
     shippingOptions?.find((o) => `${o.courier}-${o.service}` === shipping) ?? null
-  const total = cart.subtotal + (selectedShipping?.cost ?? 0)
+  const discount = voucherPreview?.discount_amount ?? 0
+  const total = cart.subtotal + (selectedShipping?.cost ?? 0) + handlingFee - discount
 
   const handleSubmit = async () => {
     setError(null)
@@ -79,12 +108,16 @@ export function Checkout() {
           payment_method: method,
           courier: selectedShipping.courier,
           service: selectedShipping.service,
+          voucher_code: voucherCode.trim() || undefined,
         })
         navigate(method === 'gdc' ? `/payment/${order.code}` : `/orders/${order.code}`, {
           replace: true,
         })
       } else {
-        const order = await checkoutMutation.mutateAsync({ payment_method: 'gdc' })
+        const order = await checkoutMutation.mutateAsync({
+          payment_method: 'gdc',
+          voucher_code: voucherCode.trim() || undefined,
+        })
         navigate(`/payment/${order.code}`, { replace: true })
       }
     } catch (err) {
@@ -260,6 +293,34 @@ export function Checkout() {
               )}
             </div>
           </section>
+
+          <section className="rounded-lg border border-cream-darker bg-white p-5">
+            <h2 className="flex items-center gap-2 text-lg font-bold">
+              <Ticket className="h-5 w-5 text-navy" /> Voucher
+            </h2>
+            <div className="mt-4 flex gap-2">
+              <input
+                value={voucherCode}
+                onChange={(e) => setVoucherCode(e.target.value)}
+                placeholder="Masukkan kode voucher"
+                className="flex-1 rounded-md border border-cream-darker px-3 py-2 text-sm focus:border-navy focus:outline-none"
+              />
+              <button
+                type="button"
+                onClick={applyVoucher}
+                disabled={applyingVoucher}
+                className="rounded-md bg-navy px-4 py-2 text-sm font-semibold text-white transition hover:bg-navy-dark disabled:opacity-50"
+              >
+                Terapkan
+              </button>
+            </div>
+            {voucherError && <p className="mt-2 text-xs text-red-600">{voucherError}</p>}
+            {voucherPreview && (
+              <p className="mt-2 text-xs text-green-700">
+                ✓ {voucherPreview.voucher.name} diterapkan (−{formatRupiah(voucherPreview.discount_amount)})
+              </p>
+            )}
+          </section>
         </div>
 
         <aside className="h-fit rounded-lg border border-cream-darker bg-white p-5">
@@ -284,6 +345,16 @@ export function Checkout() {
               <span className="text-ink-muted">Ongkir</span>
               <span>{!hasPhysical ? 'Gratis' : selectedShipping ? formatRupiah(selectedShipping.cost) : '—'}</span>
             </div>
+            <div className="flex justify-between">
+              <span className="text-ink-muted">Biaya penanganan</span>
+              <span>{formatRupiah(handlingFee)}</span>
+            </div>
+            {discount > 0 && (
+              <div className="flex justify-between text-green-700">
+                <span>Voucher</span>
+                <span>−{formatRupiah(discount)}</span>
+              </div>
+            )}
             <div className="flex justify-between border-t pt-2 text-base font-bold">
               <span>Total</span>
               <span className="text-orange-dark">{formatRupiah(total)}</span>

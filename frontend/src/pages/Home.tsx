@@ -121,7 +121,7 @@ export function Home() {
                     <Link
                       key={cat.id}
                       to={`/products?category=${cat.slug}`}
-                      className="group flex flex-col items-center gap-3 rounded-lg border border-cream-darker bg-white p-6 text-center transition hover:-translate-y-0.5 hover:border-navy/30 hover:shadow-md"
+                      className="group flex flex-col items-center gap-3 rounded-2xl border border-cream-darker/60 bg-white/80 p-6 text-center shadow-card backdrop-blur-sm transition hover:-translate-y-1 hover:border-navy/30 hover:shadow-glow"
                     >
                       <span className="flex h-14 w-14 items-center justify-center rounded-full bg-navy/10 text-navy transition group-hover:bg-navy group-hover:text-cream">
                         <Icon className="h-6 w-6" />

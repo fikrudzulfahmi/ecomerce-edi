@@ -16,7 +16,7 @@ export function Navbar() {
   }
 
   return (
-    <header className="sticky top-0 z-50 bg-navy text-cream shadow-sm">
+    <header className="sticky top-0 z-50 border-b border-white/10 bg-navy/85 text-cream shadow-lg shadow-navy/20 backdrop-blur-md">
       <Container className="flex h-16 items-center justify-between">
         <Link to="/" className="flex items-center gap-2 font-serif text-lg font-bold">
           <BookOpen className="h-6 w-6 text-orange" />

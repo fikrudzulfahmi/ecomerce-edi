@@ -22,6 +22,8 @@ import { Dashboard } from './pages/admin/Dashboard'
 import { AdminProducts } from './pages/admin/AdminProducts'
 import { AdminOrders } from './pages/admin/AdminOrders'
 import { AdminOrderDetail } from './pages/admin/AdminOrderDetail'
+import { AdminVouchers } from './pages/admin/AdminVouchers'
+import { AdminSettings } from './pages/admin/AdminSettings'
 
 function App() {
   return (
@@ -58,6 +60,8 @@ function App() {
             <Route path="products" element={<AdminProducts />} />
             <Route path="orders" element={<AdminOrders />} />
             <Route path="orders/:code" element={<AdminOrderDetail />} />
+            <Route path="vouchers" element={<AdminVouchers />} />
+            <Route path="settings" element={<AdminSettings />} />
           </Route>
         </Route>
       </Routes>

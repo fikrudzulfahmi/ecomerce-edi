@@ -1,5 +1,5 @@
 import api from './client'
-import type { Order, Product } from '../lib/types'
+import type { AdminSettings, Order, Product, Voucher, VoucherType } from '../lib/types'
 
 export interface Paginated<T> {
   data: T[]
@@ -77,6 +77,52 @@ export async function uploadFile(file: File): Promise<string> {
   form.append('file', file)
   const { data } = await api.post<{ path: string }>('/admin/files', form)
   return data.path
+}
+
+export async function fetchVouchers(): Promise<Voucher[]> {
+  const { data } = await api.get<{ data: Voucher[] }>('/admin/vouchers')
+  return data.data
+}
+
+export interface VoucherInput {
+  code: string
+  name: string
+  type: VoucherType
+  value: number
+  min_order?: number
+  usage_limit?: number | null
+  starts_at?: string | null
+  expires_at?: string | null
+  is_active?: boolean
+}
+
+export async function createVoucher(input: VoucherInput): Promise<Voucher> {
+  const { data } = await api.post<{ data: Voucher }>('/admin/vouchers', input)
+  return data.data
+}
+
+export async function updateVoucher(id: number, input: Partial<VoucherInput>): Promise<Voucher> {
+  const { data } = await api.put<{ data: Voucher }>(`/admin/vouchers/${id}`, input)
+  return data.data
+}
+
+export async function deleteVoucher(id: number): Promise<void> {
+  await api.delete(`/admin/vouchers/${id}`)
+}
+
+export async function toggleVoucher(id: number): Promise<Voucher> {
+  const { data } = await api.post<{ data: Voucher }>(`/admin/vouchers/${id}/toggle`)
+  return data.data
+}
+
+export async function fetchSettings(): Promise<AdminSettings> {
+  const { data } = await api.get<{ data: AdminSettings }>('/admin/settings')
+  return data.data
+}
+
+export async function updateSettings(settings: AdminSettings): Promise<AdminSettings> {
+  const { data } = await api.put<{ data: AdminSettings }>('/admin/settings', settings)
+  return data.data
 }
 
 export async function fetchAdminOrders(params: {

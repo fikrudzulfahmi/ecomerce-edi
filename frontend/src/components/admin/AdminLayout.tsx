@@ -1,11 +1,13 @@
 import { Link, NavLink, Outlet } from 'react-router-dom'
-import { LayoutDashboard, LogOut, Package, ShoppingBag, Store } from 'lucide-react'
+import { LayoutDashboard, LogOut, Package, Settings, ShoppingBag, Store, Ticket } from 'lucide-react'
 import { useAuthStore } from '../../store/auth'
 
 const links = [
   { to: '/admin', label: 'Dashboard', icon: LayoutDashboard, end: true },
   { to: '/admin/products', label: 'Produk', icon: Package },
   { to: '/admin/orders', label: 'Pesanan', icon: ShoppingBag },
+  { to: '/admin/vouchers', label: 'Voucher', icon: Ticket },
+  { to: '/admin/settings', label: 'Pengaturan', icon: Settings },
 ]
 
 export function AdminLayout() {

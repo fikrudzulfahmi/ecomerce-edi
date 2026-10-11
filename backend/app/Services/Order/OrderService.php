@@ -10,7 +10,9 @@ use App\Exceptions\BusinessException;
 use App\Models\Address;
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\Setting;
 use App\Models\User;
+use App\Models\Voucher;
 use App\Services\Payment\PaymentProviderInterface;
 use App\Services\Shipping\ShippingOption;
 use App\Services\Stock\StockService;
@@ -29,6 +31,8 @@ class OrderService
         ?Address $address,
         PaymentMethod $method,
         ?ShippingOption $shipping,
+        ?Voucher $voucher = null,
+        int $discount = 0,
     ): Order {
         $cart = $user->cart()->with('items.product')->first();
         $items = $cart?->items ?? collect();
@@ -47,7 +51,7 @@ class OrderService
             throw new BusinessException('Produk digital hanya bisa dibayar online (GDC).');
         }
 
-        return DB::transaction(function () use ($user, $address, $method, $shipping, $items, $hasPhysical): Order {
+        return DB::transaction(function () use ($user, $address, $method, $shipping, $items, $hasPhysical, $voucher, $discount): Order {
             $subtotal = 0;
             $orderItems = [];
             $stockItems = [];
@@ -78,7 +82,8 @@ class OrderService
             }
 
             $shippingCost = $shipping?->cost ?? 0;
-            $total = $subtotal + $shippingCost;
+            $handlingFee = (int) Setting::get('handling_fee', 0);
+            $total = $subtotal + $shippingCost + $handlingFee - $discount;
 
             $order = $user->orders()->create([
                 'code' => $this->generateCode(),
@@ -87,6 +92,10 @@ class OrderService
                     : OrderStatus::CodPending,
                 'subtotal' => $subtotal,
                 'shipping_cost' => $shippingCost,
+                'handling_fee' => $handlingFee,
+                'voucher_id' => $voucher?->id,
+                'voucher_code' => $voucher?->code,
+                'discount_amount' => $discount,
                 'total' => $total,
                 'payment_method' => $method,
                 'address_snapshot' => $address ? $this->snapshotAddress($address) : null,
@@ -116,6 +125,10 @@ class OrderService
                 $this->payment->createTransaction($order);
             }
 
+            if ($voucher) {
+                $voucher->increment('used_count');
+            }
+
             return $order->load('items.product', 'payment', 'shipment');
         });
     }
@@ -129,6 +142,7 @@ class OrderService
         DB::transaction(function () use ($order): void {
             $order->update(['status' => OrderStatus::Cancelled]);
             $this->restock($order);
+            $this->releaseVoucher($order);
         });
     }
 
@@ -156,6 +170,7 @@ class OrderService
             $order->payment()->update(['status' => 'failed']);
             $order->update(['status' => OrderStatus::Cancelled]);
             $this->restock($order);
+            $this->releaseVoucher($order);
         });
     }
 
@@ -168,12 +183,24 @@ class OrderService
         DB::transaction(function () use ($order): void {
             $order->update(['status' => OrderStatus::Expired]);
             $this->restock($order);
+            $this->releaseVoucher($order);
         });
     }
 
     private function isDigitalOnly(Order $order): bool
     {
         return $order->address_snapshot === null;
+    }
+
+    private function releaseVoucher(Order $order): void
+    {
+        if (! $order->voucher_id) {
+            return;
+        }
+
+        Voucher::whereKey($order->voucher_id)
+            ->where('used_count', '>', 0)
+            ->decrement('used_count');
     }
 
     private function restock(Order $order): void

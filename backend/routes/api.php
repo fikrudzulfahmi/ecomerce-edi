@@ -6,6 +6,8 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\FileController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
+use App\Http\Controllers\Admin\SettingController;
+use App\Http\Controllers\Admin\VoucherController;
 use App\Http\Controllers\Api\AddressController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CartController;
@@ -64,7 +66,9 @@ Route::prefix('v1')->group(function (): void {
 
         // Checkout (butuh email terverifikasi)
         Route::middleware('verified')->group(function (): void {
+            Route::get('/checkout/meta', [CheckoutController::class, 'meta']);
             Route::post('/checkout/shipping-options', [CheckoutController::class, 'shippingOptions']);
+            Route::post('/checkout/voucher', [CheckoutController::class, 'previewVoucher']);
             Route::post('/checkout', [CheckoutController::class, 'checkout']);
         });
 
@@ -87,6 +91,15 @@ Route::prefix('v1')->group(function (): void {
         Route::get('/dashboard', DashboardController::class);
 
         Route::post('/files', [FileController::class, 'store']);
+
+        Route::get('/vouchers', [VoucherController::class, 'index']);
+        Route::post('/vouchers', [VoucherController::class, 'store']);
+        Route::put('/vouchers/{voucher}', [VoucherController::class, 'update']);
+        Route::delete('/vouchers/{voucher}', [VoucherController::class, 'destroy']);
+        Route::post('/vouchers/{voucher}/toggle', [VoucherController::class, 'toggle']);
+
+        Route::get('/settings', [SettingController::class, 'index']);
+        Route::put('/settings', [SettingController::class, 'update']);
 
         Route::get('/products', [AdminProductController::class, 'index']);
         Route::post('/products', [AdminProductController::class, 'store']);

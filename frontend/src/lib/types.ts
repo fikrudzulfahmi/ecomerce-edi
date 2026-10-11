@@ -138,6 +138,9 @@ export interface Order {
   status: OrderStatus
   subtotal: number
   shipping_cost: number
+  handling_fee: number
+  discount_amount: number
+  voucher_code: string | null
   total: number
   payment_method: PaymentMethodType
   address: OrderAddress
@@ -163,4 +166,24 @@ export interface LibraryItem {
   image: string | null
   order_code: string
   purchased_at: string | null
+}
+
+export type VoucherType = 'free_shipping' | 'discount_fixed' | 'discount_percent'
+
+export interface Voucher {
+  id: number
+  code: string
+  name: string
+  type: VoucherType
+  value: number
+  min_order: number
+  usage_limit: number | null
+  used_count: number
+  starts_at: string | null
+  expires_at: string | null
+  is_active: boolean
+}
+
+export interface AdminSettings {
+  handling_fee: number
 }

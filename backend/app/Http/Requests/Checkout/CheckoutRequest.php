@@ -25,6 +25,7 @@ class CheckoutRequest extends FormRequest
             'payment_method' => ['nullable', 'in:gdc,cod'],
             'courier' => ['nullable', 'string', 'max:100'],
             'service' => ['nullable', 'string', 'max:100'],
+            'voucher_code' => ['nullable', 'string', 'max:50'],
         ];
     }
 }

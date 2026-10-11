@@ -20,6 +20,11 @@
 
   --color-ink: #1f2937;
   --color-ink-muted: #6b7280;
+
+  /* Soft shadows — glassy */
+  --shadow-soft: 0 2px 12px rgb(30 58 138 / 0.06);
+  --shadow-card: 0 6px 24px rgb(30 58 138 / 0.08);
+  --shadow-glow: 0 14px 44px rgb(30 58 138 / 0.14);
 }
 
 @layer base {
@@ -29,6 +34,11 @@
 
   body {
     @apply bg-cream font-sans text-ink antialiased;
+    background-image:
+      radial-gradient(60rem 40rem at 0% 0%, rgb(249 115 22 / 0.06), transparent),
+      radial-gradient(55rem 40rem at 100% 0%, rgb(30 58 138 / 0.07), transparent),
+      radial-gradient(45rem 35rem at 50% 100%, rgb(249 115 22 / 0.04), transparent);
+    background-attachment: fixed;
   }
 
   h1,

@@ -9,7 +9,7 @@ export function ProductCard({ product }: { product: Product }) {
   return (
     <Link
       to={`/products/${product.slug}`}
-      className="group flex flex-col overflow-hidden rounded-lg border border-cream-darker bg-white transition hover:shadow-md"
+      className="group flex flex-col overflow-hidden rounded-2xl border border-cream-darker/60 bg-white shadow-card transition hover:-translate-y-1 hover:shadow-glow"
     >
       <div className="relative aspect-square overflow-hidden bg-cream-dark">
         {product.type === 'ebook' && (
