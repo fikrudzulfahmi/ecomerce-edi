@@ -107,11 +107,11 @@ export function useDeleteAddress() {
   })
 }
 
-export function useShippingOptions(enabled: boolean) {
+export function useShippingOptions(addressId: number | null) {
   return useQuery({
-    queryKey: ['shipping-options'],
-    queryFn: fetchShippingOptions,
-    enabled,
+    queryKey: ['shipping-options', addressId],
+    queryFn: () => fetchShippingOptions(addressId as number),
+    enabled: addressId !== null,
   })
 }
 

@@ -8,7 +8,10 @@ use App\Enums\PaymentMethod;
 use App\Exceptions\BusinessException;
 use App\Http\Requests\Checkout\CheckoutRequest;
 use App\Http\Resources\OrderResource;
+use App\Models\Address;
+use App\Models\User;
 use App\Services\Order\OrderService;
+use App\Services\Shipping\ShippingDestination;
 use App\Services\Shipping\ShippingProviderInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -22,11 +25,13 @@ class CheckoutController
 
     public function shippingOptions(Request $request): JsonResponse
     {
-        $cart = $request->user()->cart()->with('items.product')->first();
+        $user = $request->user();
+        $cart = $user->cart()->with('items.product')->first();
         $items = $cart?->items ?? collect();
         $weight = $items->sum(fn ($item) => $item->qty * $item->product->weight_gram);
 
-        $options = $this->shipping->getOptions($weight);
+        $destination = $this->destinationFor($user, $request->integer('address_id'));
+        $options = $this->shipping->getOptions($destination, $weight);
 
         return response()->json([
             'data' => array_map(fn ($option) => $option->toArray(), $options),
@@ -43,7 +48,8 @@ class CheckoutController
         $cart = $user->cart()->with('items.product')->first();
         $weight = $cart?->items->sum(fn ($item) => $item->qty * $item->product->weight_gram) ?? 0;
 
-        $options = $this->shipping->getOptions($weight);
+        $destination = $this->destinationFromAddress($address);
+        $options = $this->shipping->getOptions($destination, $weight);
         $option = collect($options)->first(
             fn ($o) => $o->courier === $request->validated('courier')
                 && $o->service === $request->validated('service'),
@@ -56,5 +62,24 @@ class CheckoutController
         $order = $this->orderService->createFromCart($user, $address, $method, $option);
 
         return response()->json(['data' => new OrderResource($order)], 201);
+    }
+
+    private function destinationFor(User $user, ?int $addressId): ShippingDestination
+    {
+        $address = $addressId
+            ? $user->addresses()->find($addressId)
+            : $user->addresses()->where('is_default', true)->first();
+
+        return $this->destinationFromAddress($address);
+    }
+
+    private function destinationFromAddress(?Address $address): ShippingDestination
+    {
+        return new ShippingDestination(
+            province: $address?->province ?? '',
+            city: $address?->city ?? '',
+            district: $address?->district ?? '',
+            postalCode: $address?->postal_code ?? '',
+        );
     }
 }

@@ -16,9 +16,6 @@ export function Checkout() {
   const navigate = useNavigate()
   const { data: cart, isLoading: loadingCart } = useCart()
   const { data: addresses, isLoading: loadingAddresses } = useAddresses()
-  const { data: shippingOptions, isLoading: loadingShipping } = useShippingOptions(
-    !!cart && cart.items.length > 0,
-  )
 
   const checkoutMutation = useCheckout()
 
@@ -32,6 +29,10 @@ export function Checkout() {
     addresses?.find((a) => a.is_default) ??
     addresses?.[0] ??
     null
+
+  const { data: shippingOptions, isLoading: loadingShipping } = useShippingOptions(
+    selectedAddress?.id ?? null,
+  )
 
   if (loadingCart || loadingAddresses) {
     return (
@@ -126,7 +127,10 @@ export function Checkout() {
                       type="radio"
                       name="address"
                       checked={selectedAddress?.id === a.id}
-                      onChange={() => setAddressId(a.id)}
+                      onChange={() => {
+                        setAddressId(a.id)
+                        setShipping(null)
+                      }}
                       className="mt-1 h-4 w-4 text-navy"
                     />
                     <span className="text-sm">
@@ -184,6 +188,7 @@ export function Checkout() {
                         />
                         <span className="font-semibold">{o.courier}</span>
                         <span className="text-ink-muted">{o.service}</span>
+                        {o.estimate && <span className="text-xs text-ink-muted">· {o.estimate}</span>}
                       </span>
                       <span className="text-sm font-semibold">{formatRupiah(o.cost)}</span>
                     </label>

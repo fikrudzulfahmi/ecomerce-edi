@@ -1,8 +1,10 @@
 import api from './client'
 import type { Order, PaymentMethodType, ShippingOption } from '../lib/types'
 
-export async function fetchShippingOptions(): Promise<ShippingOption[]> {
-  const { data } = await api.post<{ data: ShippingOption[] }>('/checkout/shipping-options')
+export async function fetchShippingOptions(addressId: number): Promise<ShippingOption[]> {
+  const { data } = await api.post<{ data: ShippingOption[] }>('/checkout/shipping-options', {
+    address_id: addressId,
+  })
   return data.data
 }
 

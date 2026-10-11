@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\CheckoutController;
 use App\Http\Controllers\Api\EmailVerificationController;
+use App\Http\Controllers\Api\MengantarWebhookController;
 use App\Http\Controllers\Api\MockPaymentController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\ProductController;
@@ -22,6 +23,10 @@ Route::prefix('v1')->group(function (): void {
     Route::get('/email/verify/{id}/{hash}', [EmailVerificationController::class, 'verify'])
         ->middleware('signed')
         ->name('verification.verify');
+
+    // Webhook Mengantar (publik, diverifikasi HMAC)
+    Route::post('/webhooks/mengantar', MengantarWebhookController::class)
+        ->withoutMiddleware('throttle:api');
 
     // Katalog (publik)
     Route::get('/categories', [CategoryController::class, 'index']);

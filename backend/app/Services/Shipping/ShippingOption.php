@@ -10,6 +10,7 @@ readonly class ShippingOption
         public string $courier,
         public string $service,
         public int $cost,
+        public ?string $estimate = null,
     ) {}
 
     public function toArray(): array
@@ -18,6 +19,7 @@ readonly class ShippingOption
             'courier' => $this->courier,
             'service' => $this->service,
             'cost' => $this->cost,
+            'estimate' => $this->estimate,
         ];
     }
 }

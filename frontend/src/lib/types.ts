@@ -150,4 +150,5 @@ export interface ShippingOption {
   courier: string
   service: string
   cost: number
+  estimate: string | null
 }

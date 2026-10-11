@@ -11,7 +11,7 @@
 - [x] **Fase 4** — Katalog
 - [x] **Fase 5** — Keranjang & alamat
 - [x] **Fase 6** — Checkout & pesanan (mock payment)
-- [ ] **Fase 7** — Integrasi Mengantar.id
+- [x] **Fase 7** — Integrasi Mengantar.id
 - [ ] **Fase 8** — Pembayaran GDC (tunggu verifikasi)
 - [ ] **Fase 9** — Panel admin
 - [ ] **Fase 10** — Hardening & rilis
@@ -23,6 +23,7 @@
 - **Fase 4** — Katalog API (filter q/kategori/tipe/harga, sort, paginate, detail+related) + FE (Beranda hero+kategori+grid, listing+filter, detail produk).
 - **Fase 5** — Keranjang API (cek stok, batas qty 1–99) + CRUD alamat (default otomatis) + FE (halaman keranjang + alamat, badge navbar, intent auto-tambah setelah login).
 - **Fase 6** — Checkout & pesanan: `OrderService` (transaksi + lock stok + snapshot), `StockService`, interface `PaymentProviderInterface`/`ShippingProviderInterface` (driver mock), checkout FE (alamat/kurir/metode bayar), riwayat + detail pesanan, batalkan, job expiry, simulasi bayar GDC (mock-pay).
+- **Fase 7** — Integrasi Mengantar.id: `MengantarClient` (HTTP) + `MengantarProvider` (ongkir asli via `/order/estimate`, buat resi, tracking), `MengantarWebhookService` (verifikasi HMAC-SHA256 + idempotensi + pemetaan status → COD pelunasan), `ShippingDestination` (ongkir per tujuan), rute webhook publik, config `mengantar.php`.
 
 ## Catatan penting
 
@@ -44,4 +45,4 @@ Branch per fase (belum di-merge ke `main`):
 
 ## Berikutnya
 
-Fase 7 — Integrasi Mengantar.id: pastikan dulu ongkir/resi/tracking/COD tersedia via API; `MengantarProvider` (cek ongkir, buat shipment, tracking, webhook/polling); COD `cod_amount` + pencatatan pelunasan.
+Fase 8 — Pembayaran GDC asli (tunggu dokumentasi resmi + kredensial sandbox GDC; ganti `MockPaymentProvider` → `GdcPaymentProvider`, webhook pembayaran). Bisa juga lanjut Fase 9 (panel admin: kelola produk, konfirmasi pembayaran, buat resi via `MengantarProvider::createShipment`).
