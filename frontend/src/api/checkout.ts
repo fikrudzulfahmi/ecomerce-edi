@@ -9,10 +9,10 @@ export async function fetchShippingOptions(addressId: number): Promise<ShippingO
 }
 
 export interface CheckoutInput {
-  address_id: number
+  address_id?: number
   payment_method: PaymentMethodType
-  courier: string
-  service: string
+  courier?: string
+  service?: string
 }
 
 export async function checkout(input: CheckoutInput): Promise<Order> {

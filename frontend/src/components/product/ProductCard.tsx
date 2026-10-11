@@ -11,7 +11,17 @@ export function ProductCard({ product }: { product: Product }) {
       to={`/products/${product.slug}`}
       className="group flex flex-col overflow-hidden rounded-lg border border-cream-darker bg-white transition hover:shadow-md"
     >
-      <div className="aspect-square overflow-hidden bg-cream-dark">
+      <div className="relative aspect-square overflow-hidden bg-cream-dark">
+        {product.type === 'ebook' && (
+          <span className="absolute left-2 top-2 z-10 rounded bg-blue-600 px-2 py-0.5 text-xs font-semibold text-white">
+            E-Book
+          </span>
+        )}
+        {product.type === 'bundle' && (
+          <span className="absolute left-2 top-2 z-10 rounded bg-purple-600 px-2 py-0.5 text-xs font-semibold text-white">
+            Bundle
+          </span>
+        )}
         {image ? (
           <img
             src={image}
@@ -31,7 +41,9 @@ export function ProductCard({ product }: { product: Product }) {
         {product.book_detail?.author && (
           <p className="text-xs text-ink-muted">{product.book_detail.author}</p>
         )}
-        {product.stock === 0 && <p className="text-xs font-medium text-red-600">Stok habis</p>}
+        {product.type !== 'ebook' && product.stock === 0 && (
+          <p className="text-xs font-medium text-red-600">Stok habis</p>
+        )}
         <p className="mt-auto pt-2 font-semibold text-orange-dark">{formatRupiah(product.price)}</p>
       </div>
     </Link>

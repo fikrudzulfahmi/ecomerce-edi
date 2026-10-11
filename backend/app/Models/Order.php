@@ -60,4 +60,18 @@ class Order extends Model
     {
         return $this->hasOne(Shipment::class);
     }
+
+    public function isPaidForDownload(): bool
+    {
+        if ($this->payment_method === PaymentMethod::Cod) {
+            return $this->status === OrderStatus::CodCompleted;
+        }
+
+        return in_array($this->status, [
+            OrderStatus::Paid,
+            OrderStatus::Processing,
+            OrderStatus::Shipped,
+            OrderStatus::Delivered,
+        ], true);
+    }
 }

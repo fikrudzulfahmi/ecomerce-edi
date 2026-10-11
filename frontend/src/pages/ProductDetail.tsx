@@ -127,7 +127,11 @@ export function ProductDetail() {
           )}
 
           <p className="text-sm font-medium text-ink">
-            {product.stock > 0 ? `Stok tersedia: ${product.stock}` : 'Stok habis'}
+            {product.type === 'ebook'
+              ? 'Produk digital (E-Book)'
+              : product.stock > 0
+                ? `Stok tersedia: ${product.stock}`
+                : 'Stok habis'}
           </p>
 
           {product.description && (
@@ -147,7 +151,7 @@ export function ProductDetail() {
               <span className="w-10 text-center text-sm font-medium">{qty}</span>
               <button
                 type="button"
-                onClick={() => setQty((q) => Math.min(product.stock || 1, q + 1))}
+                onClick={() => setQty((q) => Math.min(product.type === 'ebook' ? 99 : product.stock || 1, q + 1))}
                 className="px-3 py-2 text-navy hover:bg-cream-dark"
                 aria-label="Tambah jumlah"
               >
@@ -158,7 +162,7 @@ export function ProductDetail() {
             <Button
               type="button"
               onClick={handleAddToCart}
-              disabled={product.stock === 0}
+              disabled={product.type !== 'ebook' && product.stock === 0}
               className="flex-1 md:flex-none md:px-8"
             >
               <ShoppingCart className="h-4 w-4" />

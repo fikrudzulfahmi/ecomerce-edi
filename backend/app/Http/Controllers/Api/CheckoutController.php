@@ -28,7 +28,15 @@ class CheckoutController
         $user = $request->user();
         $cart = $user->cart()->with('items.product')->first();
         $items = $cart?->items ?? collect();
-        $weight = $items->sum(fn ($item) => $item->qty * $item->product->weight_gram);
+
+        $hasPhysical = $items->contains(fn ($item) => ! $item->product->isEbook());
+        $weight = $items->sum(
+            fn ($item) => $item->product->isEbook() ? 0 : $item->qty * $item->product->weight_gram,
+        );
+
+        if (! $hasPhysical) {
+            return response()->json(['data' => [], 'total_weight_gram' => 0]);
+        }
 
         $destination = $this->destinationFor($user, $request->integer('address_id'));
         $options = $this->shipping->getOptions($destination, $weight);
@@ -42,12 +50,33 @@ class CheckoutController
     public function checkout(CheckoutRequest $request): JsonResponse
     {
         $user = $request->user();
-        $address = $user->addresses()->findOrFail($request->validated('address_id'));
-        $method = PaymentMethod::from($request->validated('payment_method'));
-
         $cart = $user->cart()->with('items.product')->first();
-        $weight = $cart?->items->sum(fn ($item) => $item->qty * $item->product->weight_gram) ?? 0;
+        $items = $cart?->items ?? collect();
 
+        if ($items->isEmpty()) {
+            throw new BusinessException('Keranjang kosong.');
+        }
+
+        $hasPhysical = $items->contains(fn ($item) => ! $item->product->isEbook());
+
+        // Digital-only: tanpa alamat & ongkir, wajib GDC.
+        if (! $hasPhysical) {
+            $order = $this->orderService->createFromCart($user, null, PaymentMethod::Gdc, null);
+
+            return response()->json(['data' => new OrderResource($order)], 201);
+        }
+
+        $addressId = $request->integer('address_id');
+        if (! $addressId) {
+            throw new BusinessException('Alamat pengiriman wajib diisi.');
+        }
+
+        $address = $user->addresses()->findOrFail($addressId);
+        $method = PaymentMethod::from($request->validated('payment_method') ?? 'gdc');
+
+        $weight = $items->sum(
+            fn ($item) => $item->product->isEbook() ? 0 : $item->qty * $item->product->weight_gram,
+        );
         $destination = $this->destinationFromAddress($address);
         $options = $this->shipping->getOptions($destination, $weight);
         $option = collect($options)->first(

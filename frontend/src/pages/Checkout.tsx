@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { MapPin, Truck, Wallet } from 'lucide-react'
+import { Download, MapPin, Truck, Wallet } from 'lucide-react'
 import { useAddresses, useCart, useCheckout, useShippingOptions } from '../api/hooks'
 import { formatRupiah } from '../lib/format'
 import { extractErrorMessage } from '../lib/errors'
@@ -24,6 +24,8 @@ export function Checkout() {
   const [method, setMethod] = useState<PaymentMethodType>('gdc')
   const [error, setError] = useState<string | null>(null)
 
+  const hasPhysical = cart ? cart.items.some((item) => item.product.type !== 'ebook') : true
+
   const selectedAddress =
     addresses?.find((a) => a.id === addressId) ??
     addresses?.find((a) => a.is_default) ??
@@ -31,7 +33,7 @@ export function Checkout() {
     null
 
   const { data: shippingOptions, isLoading: loadingShipping } = useShippingOptions(
-    selectedAddress?.id ?? null,
+    hasPhysical ? selectedAddress?.id ?? null : null,
   )
 
   if (loadingCart || loadingAddresses) {
@@ -60,26 +62,30 @@ export function Checkout() {
 
   const handleSubmit = async () => {
     setError(null)
-    if (!selectedAddress) {
-      setError('Pilih alamat pengiriman.')
-      return
-    }
-    if (!selectedShipping) {
-      setError('Pilih kurir pengiriman.')
-      return
-    }
 
     try {
-      const order = await checkoutMutation.mutateAsync({
-        address_id: selectedAddress.id,
-        payment_method: method,
-        courier: selectedShipping.courier,
-        service: selectedShipping.service,
-      })
-      if (method === 'gdc') {
-        navigate(`/payment/${order.code}`, { replace: true })
+      if (hasPhysical) {
+        if (!selectedAddress) {
+          setError('Pilih alamat pengiriman.')
+          return
+        }
+        if (!selectedShipping) {
+          setError('Pilih kurir pengiriman.')
+          return
+        }
+
+        const order = await checkoutMutation.mutateAsync({
+          address_id: selectedAddress.id,
+          payment_method: method,
+          courier: selectedShipping.courier,
+          service: selectedShipping.service,
+        })
+        navigate(method === 'gdc' ? `/payment/${order.code}` : `/orders/${order.code}`, {
+          replace: true,
+        })
       } else {
-        navigate(`/orders/${order.code}`, { replace: true })
+        const order = await checkoutMutation.mutateAsync({ payment_method: 'gdc' })
+        navigate(`/payment/${order.code}`, { replace: true })
       }
     } catch (err) {
       setError(extractErrorMessage(err))
@@ -89,6 +95,15 @@ export function Checkout() {
   return (
     <Container className="py-10">
       <h1 className="text-2xl font-bold">Checkout</h1>
+
+      {!hasPhysical && (
+        <div className="mt-4">
+          <Alert variant="info">
+            <Download className="mr-2 inline h-4 w-4" />
+            Pesanan digital — tanpa alamat & ongkir, bayar online lalu langsung unduh.
+          </Alert>
+        </div>
+      )}
 
       {notVerified && (
         <div className="mt-4">
@@ -110,93 +125,97 @@ export function Checkout() {
 
       <div className="mt-6 grid gap-8 lg:grid-cols-[1fr_22rem]">
         <div className="space-y-6">
-          <section className="rounded-lg border border-cream-darker bg-white p-5">
-            <h2 className="flex items-center gap-2 text-lg font-bold">
-              <MapPin className="h-5 w-5 text-navy" /> Alamat Pengiriman
-            </h2>
-            {addresses && addresses.length > 0 ? (
-              <div className="mt-4 space-y-2">
-                {addresses.map((a) => (
-                  <label
-                    key={a.id}
-                    className={`flex cursor-pointer items-start gap-3 rounded-md border p-3 ${
-                      addressId === a.id ? 'border-navy bg-navy/5' : 'border-cream-darker'
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="address"
-                      checked={selectedAddress?.id === a.id}
-                      onChange={() => {
-                        setAddressId(a.id)
-                        setShipping(null)
-                      }}
-                      className="mt-1 h-4 w-4 text-navy"
-                    />
-                    <span className="text-sm">
-                      <span className="font-semibold">
-                        {a.recipient} <span className="font-normal text-ink-muted">· {a.phone}</span>
-                        {a.is_default && (
-                          <span className="ml-2 rounded bg-cream-dark px-1.5 py-0.5 text-xs">Utama</span>
-                        )}
-                      </span>
-                      <span className="block text-ink-muted">
-                        {a.detail}, {a.district}, {a.city}, {a.province} {a.postal_code}
-                      </span>
-                    </span>
-                  </label>
-                ))}
-                <Link to="/addresses" className="inline-block text-sm font-semibold text-navy hover:underline">
-                  + Kelola alamat
-                </Link>
-              </div>
-            ) : (
-              <p className="mt-2 text-sm text-ink-muted">
-                Belum ada alamat.{' '}
-                <Link to="/addresses" className="font-semibold text-navy hover:underline">
-                  Tambahkan alamat
-                </Link>
-                .
-              </p>
-            )}
-          </section>
-
-          <section className="rounded-lg border border-cream-darker bg-white p-5">
-            <h2 className="flex items-center gap-2 text-lg font-bold">
-              <Truck className="h-5 w-5 text-navy" /> Kurir Pengiriman
-            </h2>
-            {loadingShipping ? (
-              <Skeleton className="mt-4 h-16" />
-            ) : (
-              <div className="mt-4 space-y-2">
-                {shippingOptions?.map((o) => {
-                  const key = `${o.courier}-${o.service}`
-                  return (
+          {hasPhysical && (
+            <section className="rounded-lg border border-cream-darker bg-white p-5">
+              <h2 className="flex items-center gap-2 text-lg font-bold">
+                <MapPin className="h-5 w-5 text-navy" /> Alamat Pengiriman
+              </h2>
+              {addresses && addresses.length > 0 ? (
+                <div className="mt-4 space-y-2">
+                  {addresses.map((a) => (
                     <label
-                      key={key}
-                      className={`flex cursor-pointer items-center justify-between rounded-md border p-3 ${
-                        shipping === key ? 'border-navy bg-navy/5' : 'border-cream-darker'
+                      key={a.id}
+                      className={`flex cursor-pointer items-start gap-3 rounded-md border p-3 ${
+                        selectedAddress?.id === a.id ? 'border-navy bg-navy/5' : 'border-cream-darker'
                       }`}
                     >
-                      <span className="flex items-center gap-3 text-sm">
-                        <input
-                          type="radio"
-                          name="shipping"
-                          checked={shipping === key}
-                          onChange={() => setShipping(key)}
-                          className="h-4 w-4 text-navy"
-                        />
-                        <span className="font-semibold">{o.courier}</span>
-                        <span className="text-ink-muted">{o.service}</span>
-                        {o.estimate && <span className="text-xs text-ink-muted">· {o.estimate}</span>}
+                      <input
+                        type="radio"
+                        name="address"
+                        checked={selectedAddress?.id === a.id}
+                        onChange={() => {
+                          setAddressId(a.id)
+                          setShipping(null)
+                        }}
+                        className="mt-1 h-4 w-4 text-navy"
+                      />
+                      <span className="text-sm">
+                        <span className="font-semibold">
+                          {a.recipient} <span className="font-normal text-ink-muted">· {a.phone}</span>
+                          {a.is_default && (
+                            <span className="ml-2 rounded bg-cream-dark px-1.5 py-0.5 text-xs">Utama</span>
+                          )}
+                        </span>
+                        <span className="block text-ink-muted">
+                          {a.detail}, {a.district}, {a.city}, {a.province} {a.postal_code}
+                        </span>
                       </span>
-                      <span className="text-sm font-semibold">{formatRupiah(o.cost)}</span>
                     </label>
-                  )
-                })}
-              </div>
-            )}
-          </section>
+                  ))}
+                  <Link to="/addresses" className="inline-block text-sm font-semibold text-navy hover:underline">
+                    + Kelola alamat
+                  </Link>
+                </div>
+              ) : (
+                <p className="mt-2 text-sm text-ink-muted">
+                  Belum ada alamat.{' '}
+                  <Link to="/addresses" className="font-semibold text-navy hover:underline">
+                    Tambahkan alamat
+                  </Link>
+                  .
+                </p>
+              )}
+            </section>
+          )}
+
+          {hasPhysical && (
+            <section className="rounded-lg border border-cream-darker bg-white p-5">
+              <h2 className="flex items-center gap-2 text-lg font-bold">
+                <Truck className="h-5 w-5 text-navy" /> Kurir Pengiriman
+              </h2>
+              {loadingShipping ? (
+                <Skeleton className="mt-4 h-16" />
+              ) : (
+                <div className="mt-4 space-y-2">
+                  {shippingOptions?.map((o) => {
+                    const key = `${o.courier}-${o.service}`
+                    return (
+                      <label
+                        key={key}
+                        className={`flex cursor-pointer items-center justify-between rounded-md border p-3 ${
+                          shipping === key ? 'border-navy bg-navy/5' : 'border-cream-darker'
+                        }`}
+                      >
+                        <span className="flex items-center gap-3 text-sm">
+                          <input
+                            type="radio"
+                            name="shipping"
+                            checked={shipping === key}
+                            onChange={() => setShipping(key)}
+                            className="h-4 w-4 text-navy"
+                          />
+                          <span className="font-semibold">{o.courier}</span>
+                          <span className="text-ink-muted">{o.service}</span>
+                          {o.estimate && <span className="text-xs text-ink-muted">· {o.estimate}</span>}
+                        </span>
+                        <span className="text-sm font-semibold">{formatRupiah(o.cost)}</span>
+                      </label>
+                    )
+                  })}
+                </div>
+              )}
+            </section>
+          )}
 
           <section className="rounded-lg border border-cream-darker bg-white p-5">
             <h2 className="flex items-center gap-2 text-lg font-bold">
@@ -220,23 +239,25 @@ export function Checkout() {
                   <span className="text-ink-muted">Transfer / online</span>
                 </span>
               </label>
-              <label
-                className={`flex cursor-pointer items-center justify-between rounded-md border p-3 ${
-                  method === 'cod' ? 'border-navy bg-navy/5' : 'border-cream-darker'
-                }`}
-              >
-                <span className="flex items-center gap-3 text-sm">
-                  <input
-                    type="radio"
-                    name="method"
-                    checked={method === 'cod'}
-                    onChange={() => setMethod('cod')}
-                    className="h-4 w-4 text-navy"
-                  />
-                  <span className="font-semibold">COD</span>
-                  <span className="text-ink-muted">Bayar di tempat</span>
-                </span>
-              </label>
+              {hasPhysical && (
+                <label
+                  className={`flex cursor-pointer items-center justify-between rounded-md border p-3 ${
+                    method === 'cod' ? 'border-navy bg-navy/5' : 'border-cream-darker'
+                  }`}
+                >
+                  <span className="flex items-center gap-3 text-sm">
+                    <input
+                      type="radio"
+                      name="method"
+                      checked={method === 'cod'}
+                      onChange={() => setMethod('cod')}
+                      className="h-4 w-4 text-navy"
+                    />
+                    <span className="font-semibold">COD</span>
+                    <span className="text-ink-muted">Bayar di tempat</span>
+                  </span>
+                </label>
+              )}
             </div>
           </section>
         </div>
@@ -248,6 +269,9 @@ export function Checkout() {
               <div key={item.id} className="flex justify-between gap-3">
                 <span className="text-ink-muted">
                   {item.product.name} × {item.qty}
+                  {item.product.type === 'ebook' && (
+                    <span className="ml-1 rounded bg-blue-100 px-1.5 py-0.5 text-xs text-blue-700">E-Book</span>
+                  )}
                 </span>
                 <span>{formatRupiah(item.subtotal)}</span>
               </div>
@@ -258,7 +282,7 @@ export function Checkout() {
             </div>
             <div className="flex justify-between">
               <span className="text-ink-muted">Ongkir</span>
-              <span>{selectedShipping ? formatRupiah(selectedShipping.cost) : '—'}</span>
+              <span>{!hasPhysical ? 'Gratis' : selectedShipping ? formatRupiah(selectedShipping.cost) : '—'}</span>
             </div>
             <div className="flex justify-between border-t pt-2 text-base font-bold">
               <span>Total</span>
@@ -271,7 +295,11 @@ export function Checkout() {
             loading={checkoutMutation.isPending}
             disabled={notVerified}
           >
-            {method === 'gdc' ? 'Buat Pesanan & Bayar' : 'Buat Pesanan (COD)'}
+            {hasPhysical
+              ? method === 'gdc'
+                ? 'Buat Pesanan & Bayar'
+                : 'Buat Pesanan (COD)'
+              : 'Beli & Bayar'}
           </Button>
         </aside>
       </div>

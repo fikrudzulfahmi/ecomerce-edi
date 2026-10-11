@@ -36,7 +36,7 @@ export interface BookDetail {
   language: string | null
 }
 
-export type ProductType = 'book' | 'other'
+export type ProductType = 'book' | 'other' | 'ebook' | 'bundle'
 
 export interface Product {
   id: number
@@ -51,6 +51,8 @@ export interface Product {
   description: string | null
   category: Category | null
   book_detail: BookDetail | null
+  digital_file: string | null
+  bundle_physical_id: number | null
   created_at: string
 }
 
@@ -151,4 +153,14 @@ export interface ShippingOption {
   service: string
   cost: number
   estimate: string | null
+}
+
+export interface LibraryItem {
+  id: number
+  product_id: number
+  name: string
+  type: ProductType | null
+  image: string | null
+  order_code: string
+  purchased_at: string | null
 }

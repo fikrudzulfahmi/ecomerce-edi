@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, type ChangeEvent } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Pencil, Plus, Trash2 } from 'lucide-react'
 import {
@@ -7,6 +7,7 @@ import {
   fetchAdminProducts,
   toggleProduct,
   updateProduct,
+  uploadFile,
   type ProductInput,
 } from '../../api/admin'
 import { useCategories } from '../../api/hooks'
@@ -41,6 +42,7 @@ export function AdminProducts() {
         <ProductForm
           product={editing === 'new' ? null : editing}
           categories={categories ?? []}
+          products={data?.data ?? []}
           onClose={() => setEditing(null)}
           onSaved={() => {
             setEditing(null)
@@ -124,11 +126,13 @@ export function AdminProducts() {
 function ProductForm({
   product,
   categories,
+  products,
   onClose,
   onSaved,
 }: {
   product: Product | null
   categories: Category[]
+  products: Product[]
   onClose: () => void
   onSaved: () => void
 }) {
@@ -144,7 +148,31 @@ function ProductForm({
   const [author, setAuthor] = useState(product?.book_detail?.author ?? '')
   const [isbn, setIsbn] = useState(product?.book_detail?.isbn ?? '')
   const [publisher, setPublisher] = useState(product?.book_detail?.publisher ?? '')
+  const [digitalFile, setDigitalFile] = useState(product?.digital_file ?? '')
+  const [fileName, setFileName] = useState('')
+  const [bundlePhysicalId, setBundlePhysicalId] = useState(
+    product?.bundle_physical_id ? String(product.bundle_physical_id) : '',
+  )
+  const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  const physicalProducts = products.filter((p) => p.type === 'book' || p.type === 'other')
+
+  const handleFile = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploading(true)
+    setError(null)
+    try {
+      const path = await uploadFile(file)
+      setDigitalFile(path)
+      setFileName(file.name)
+    } catch {
+      setError('Gagal mengunggah file.')
+    } finally {
+      setUploading(false)
+    }
+  }
 
   const mutation = useMutation({
     mutationFn: () => {
@@ -158,6 +186,12 @@ function ProductForm({
         status,
         description: description || undefined,
         images: images.split(',').map((s) => s.trim()).filter(Boolean),
+      }
+      if (type === 'ebook' || type === 'bundle') {
+        input.digital_file = digitalFile || undefined
+      }
+      if (type === 'bundle') {
+        input.bundle_physical_id = bundlePhysicalId ? Number(bundlePhysicalId) : undefined
       }
       if (type === 'book') {
         input.book_detail = { author: author || undefined, isbn: isbn || undefined, publisher: publisher || undefined }
@@ -197,6 +231,8 @@ function ProductForm({
           <select className={field} value={type} onChange={(e) => setType(e.target.value as ProductType)}>
             <option value="book">Buku</option>
             <option value="other">Non-buku</option>
+            <option value="ebook">E-Book</option>
+            <option value="bundle">Bundle (cetak + digital)</option>
           </select>
         </div>
         <div>
@@ -226,6 +262,37 @@ function ProductForm({
           <label className={label}>Deskripsi</label>
           <textarea className={field} rows={3} value={description} onChange={(e) => setDescription(e.target.value)} />
         </div>
+
+        {(type === 'ebook' || type === 'bundle') && (
+          <div className="sm:col-span-2">
+            <label className={label}>File PDF/EPUB</label>
+            <input
+              type="file"
+              accept=".pdf,.epub"
+              onChange={handleFile}
+              className="block w-full text-sm text-ink-muted file:mr-3 file:rounded-md file:border-0 file:bg-navy file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white"
+            />
+            {uploading ? (
+              <p className="mt-1 text-xs text-ink-muted">Mengunggah…</p>
+            ) : digitalFile || fileName ? (
+              <p className="mt-1 text-xs text-green-700">✓ {fileName || digitalFile}</p>
+            ) : null}
+          </div>
+        )}
+
+        {type === 'bundle' && (
+          <div className="sm:col-span-2">
+            <label className={label}>Buku fisik (dikirim)</label>
+            <select className={field} value={bundlePhysicalId} onChange={(e) => setBundlePhysicalId(e.target.value)}>
+              <option value="">— pilih buku fisik —</option>
+              {physicalProducts.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
 
         {type === 'book' && (
           <>

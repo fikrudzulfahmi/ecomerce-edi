@@ -30,7 +30,7 @@ class CartController
         $product = Product::where('status', 'active')->findOrFail($request->validated('product_id'));
         $qty = (int) $request->validated('qty');
 
-        if ($product->stock <= 0) {
+        if (! $product->isEbook() && $product->stock <= 0) {
             throw ValidationException::withMessages([
                 'product_id' => ['Produk sedang kosong.'],
             ]);
@@ -41,7 +41,7 @@ class CartController
 
         $newQty = $item ? $item->qty + $qty : $qty;
 
-        if ($newQty > $product->stock) {
+        if (! $product->isEbook() && $newQty > $product->stock) {
             throw ValidationException::withMessages([
                 'qty' => ["Jumlah melebihi stok (tersisa {$product->stock})."],
             ]);
@@ -67,7 +67,7 @@ class CartController
         $cartItem = $cart->items()->with('product')->findOrFail($item);
         $qty = (int) $request->validated('qty');
 
-        if ($qty > $cartItem->product->stock) {
+        if (! $cartItem->product->isEbook() && $qty > $cartItem->product->stock) {
             throw ValidationException::withMessages([
                 'qty' => ["Jumlah melebihi stok (tersisa {$cartItem->product->stock})."],
             ]);

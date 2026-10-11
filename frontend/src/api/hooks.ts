@@ -16,6 +16,7 @@ import {
   mockFailOrder,
   mockPayOrder,
 } from './orders'
+import { fetchLibrary } from './library'
 import { useAuthStore } from '../store/auth'
 
 export function useCategories() {
@@ -165,5 +166,12 @@ export function useMockFail() {
   return useMutation({
     mutationFn: (code: string) => mockFailOrder(code),
     onSuccess: (order, code) => queryClient.setQueryData(['order', code], order),
+  })
+}
+
+export function useLibrary() {
+  return useQuery({
+    queryKey: ['library'],
+    queryFn: fetchLibrary,
   })
 }

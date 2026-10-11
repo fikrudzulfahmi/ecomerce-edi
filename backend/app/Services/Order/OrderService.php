@@ -26,9 +26,9 @@ class OrderService
 
     public function createFromCart(
         User $user,
-        Address $address,
+        ?Address $address,
         PaymentMethod $method,
-        ShippingOption $shipping,
+        ?ShippingOption $shipping,
     ): Order {
         $cart = $user->cart()->with('items.product')->first();
         $items = $cart?->items ?? collect();
@@ -37,17 +37,30 @@ class OrderService
             throw new BusinessException('Keranjang kosong.');
         }
 
-        return DB::transaction(function () use ($user, $address, $method, $shipping, $items): Order {
+        $hasPhysical = $items->contains(fn ($item) => ! $item->product->isEbook());
+
+        if ($hasPhysical && (! $address || ! $shipping)) {
+            throw new BusinessException('Alamat dan kurir wajib untuk produk fisik.');
+        }
+
+        if (! $hasPhysical && $method !== PaymentMethod::Gdc) {
+            throw new BusinessException('Produk digital hanya bisa dibayar online (GDC).');
+        }
+
+        return DB::transaction(function () use ($user, $address, $method, $shipping, $items, $hasPhysical): Order {
             $subtotal = 0;
             $orderItems = [];
+            $stockItems = [];
 
             foreach ($items as $item) {
-                // Kunci baris produk agar stok tidak berubah selama checkout.
                 $product = Product::whereKey($item->product_id)->lockForUpdate()->first();
 
-                if (! $product || $product->stock < $item->qty) {
-                    $productName = $product?->name ?? 'produk';
-                    throw new BusinessException("Stok '{$productName}' tidak mencukupi.");
+                if (! $product) {
+                    throw new BusinessException('Produk tidak ditemukan.');
+                }
+
+                if (! $product->isEbook() && $product->stock < $item->qty) {
+                    throw new BusinessException("Stok '{$product->name}' tidak mencukupi.");
                 }
 
                 $subtotal += $item->qty * $product->price;
@@ -58,9 +71,14 @@ class OrderService
                     'price_snapshot' => $product->price,
                     'qty' => $item->qty,
                 ];
+
+                if (! $product->isEbook()) {
+                    $stockItems[] = ['product_id' => $product->id, 'qty' => $item->qty];
+                }
             }
 
-            $total = $subtotal + $shipping->cost;
+            $shippingCost = $shipping?->cost ?? 0;
+            $total = $subtotal + $shippingCost;
 
             $order = $user->orders()->create([
                 'code' => $this->generateCode(),
@@ -68,28 +86,31 @@ class OrderService
                     ? OrderStatus::PendingPayment
                     : OrderStatus::CodPending,
                 'subtotal' => $subtotal,
-                'shipping_cost' => $shipping->cost,
+                'shipping_cost' => $shippingCost,
                 'total' => $total,
                 'payment_method' => $method,
-                'address_snapshot' => $this->snapshotAddress($address),
+                'address_snapshot' => $address ? $this->snapshotAddress($address) : null,
                 'expires_at' => $method === PaymentMethod::Gdc ? now()->addHours(2) : null,
             ]);
 
             foreach ($orderItems as $data) {
                 $order->items()->create($data);
-                $this->stock->reduce($data['product_id'], $data['qty']);
             }
 
-            // Kosongkan keranjang.
+            foreach ($stockItems as $stock) {
+                $this->stock->reduce($stock['product_id'], $stock['qty']);
+            }
+
             $items->each->delete();
 
-            // Kurir yang dipilih disimpan di shipment (resi dibuat di Fase 9).
-            $order->shipment()->create([
-                'courier' => $shipping->courier,
-                'service' => $shipping->service,
-                'status' => 'pending',
-                'cod_amount' => $method === PaymentMethod::Cod ? $total : 0,
-            ]);
+            if ($hasPhysical && $shipping) {
+                $order->shipment()->create([
+                    'courier' => $shipping->courier,
+                    'service' => $shipping->service,
+                    'status' => 'pending',
+                    'cod_amount' => $method === PaymentMethod::Cod ? $total : 0,
+                ]);
+            }
 
             if ($method === PaymentMethod::Gdc) {
                 $this->payment->createTransaction($order);
@@ -119,7 +140,9 @@ class OrderService
 
         DB::transaction(function () use ($order): void {
             $order->payment()->update(['status' => 'paid', 'paid_at' => now()]);
-            $order->update(['status' => OrderStatus::Paid]);
+            $order->update([
+                'status' => $this->isDigitalOnly($order) ? OrderStatus::Delivered : OrderStatus::Paid,
+            ]);
         });
     }
 
@@ -148,12 +171,21 @@ class OrderService
         });
     }
 
+    private function isDigitalOnly(Order $order): bool
+    {
+        return $order->address_snapshot === null;
+    }
+
     private function restock(Order $order): void
     {
+        $order->loadMissing('items.product');
+
         foreach ($order->items as $item) {
-            if ($item->product_id !== null) {
-                $this->stock->increase($item->product_id, $item->qty);
+            if ($item->product_id === null || $item->product?->isEbook()) {
+                continue;
             }
+
+            $this->stock->increase($item->product_id, $item->qty);
         }
     }
 

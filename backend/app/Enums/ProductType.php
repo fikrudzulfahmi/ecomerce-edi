@@ -8,4 +8,6 @@ enum ProductType: string
 {
     case Book = 'book';
     case Other = 'other';
+    case Ebook = 'ebook';
+    case Bundle = 'bundle';
 }

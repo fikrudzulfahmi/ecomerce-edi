@@ -28,6 +28,8 @@ class Product extends Model
         'stock',
         'status',
         'images',
+        'digital_file',
+        'bundle_physical_id',
     ];
 
     protected function casts(): array
@@ -54,6 +56,21 @@ class Product extends Model
     public function stockMovements(): HasMany
     {
         return $this->hasMany(StockMovement::class);
+    }
+
+    public function bundlePhysical(): BelongsTo
+    {
+        return $this->belongsTo(Product::class, 'bundle_physical_id');
+    }
+
+    public function isEbook(): bool
+    {
+        return $this->type === ProductType::Ebook;
+    }
+
+    public function isDigital(): bool
+    {
+        return in_array($this->type, [ProductType::Ebook, ProductType::Bundle], true);
     }
 
     public function scopeActive($query)

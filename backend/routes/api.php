@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\FileController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Api\AddressController;
@@ -10,7 +11,9 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\CheckoutController;
+use App\Http\Controllers\Api\DownloadController;
 use App\Http\Controllers\Api\EmailVerificationController;
+use App\Http\Controllers\Api\LibraryController;
 use App\Http\Controllers\Api\MengantarWebhookController;
 use App\Http\Controllers\Api\MockPaymentController;
 use App\Http\Controllers\Api\OrderController;
@@ -30,6 +33,11 @@ Route::prefix('v1')->group(function (): void {
     // Webhook Mengantar (publik, diverifikasi HMAC)
     Route::post('/webhooks/mengantar', MengantarWebhookController::class)
         ->withoutMiddleware('throttle:api');
+
+    // Download file digital (link tertanda tangan, kadaluarsa 24 jam)
+    Route::get('/downloads/{orderItem}', DownloadController::class)
+        ->middleware('signed')
+        ->name('downloads.show');
 
     // Katalog (publik)
     Route::get('/categories', [CategoryController::class, 'index']);
@@ -65,6 +73,10 @@ Route::prefix('v1')->group(function (): void {
         Route::get('/orders/{code}', [OrderController::class, 'show']);
         Route::post('/orders/{code}/cancel', [OrderController::class, 'cancel']);
 
+        // Pustaka (ebook yang sudah dibeli)
+        Route::get('/library', [LibraryController::class, 'index']);
+        Route::get('/library/items/{orderItem}/download-url', [LibraryController::class, 'downloadUrl']);
+
         // Simulasi pembayaran GDC (Fase 6, diganti webhook Fase 8)
         Route::post('/orders/{code}/mock-pay', [MockPaymentController::class, 'success']);
         Route::post('/orders/{code}/mock-fail', [MockPaymentController::class, 'failure']);
@@ -73,6 +85,8 @@ Route::prefix('v1')->group(function (): void {
     // Panel admin
     Route::middleware(['auth:sanctum', 'role:admin'])->prefix('admin')->group(function (): void {
         Route::get('/dashboard', DashboardController::class);
+
+        Route::post('/files', [FileController::class, 'store']);
 
         Route::get('/products', [AdminProductController::class, 'index']);
         Route::post('/products', [AdminProductController::class, 'store']);

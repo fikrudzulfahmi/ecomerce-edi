@@ -24,13 +24,15 @@ export async function fetchDashboard(): Promise<DashboardStats> {
 export interface ProductInput {
   name: string
   category_id: number
-  type: 'book' | 'other'
+  type: 'book' | 'other' | 'ebook' | 'bundle'
   price: number
   weight_gram?: number
   stock?: number
   status?: 'active' | 'inactive'
   description?: string
   images?: string[]
+  digital_file?: string | null
+  bundle_physical_id?: number | null
   book_detail?: {
     isbn?: string
     author?: string
@@ -68,6 +70,13 @@ export async function deleteProduct(id: number): Promise<void> {
 export async function toggleProduct(id: number): Promise<Product> {
   const { data } = await api.post<{ data: Product }>(`/admin/products/${id}/toggle`)
   return data.data
+}
+
+export async function uploadFile(file: File): Promise<string> {
+  const form = new FormData()
+  form.append('file', file)
+  const { data } = await api.post<{ path: string }>('/admin/files', form)
+  return data.path
 }
 
 export async function fetchAdminOrders(params: {

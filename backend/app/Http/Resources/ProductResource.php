@@ -21,6 +21,8 @@ class ProductResource extends JsonResource
             'stock' => $this->stock,
             'status' => $this->status,
             'images' => $this->images ?? [],
+            'digital_file' => $this->digital_file,
+            'bundle_physical_id' => $this->bundle_physical_id,
             'description' => $this->description,
             'category' => new CategoryResource($this->whenLoaded('category')),
             'book_detail' => new BookDetailResource($this->whenLoaded('bookDetail')),

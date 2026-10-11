@@ -12,6 +12,7 @@ import { Payment } from './pages/Payment'
 import { Addresses } from './pages/Addresses'
 import { Orders } from './pages/Orders'
 import { OrderDetail } from './pages/OrderDetail'
+import { Library } from './pages/Library'
 import { Login } from './pages/Login'
 import { Register } from './pages/Register'
 import { VerifyEmail } from './pages/VerifyEmail'
@@ -44,6 +45,7 @@ function App() {
             <Route path="/addresses" element={<Addresses />} />
             <Route path="/orders" element={<Orders />} />
             <Route path="/orders/:code" element={<OrderDetail />} />
+            <Route path="/library" element={<Library />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />

@@ -44,6 +44,14 @@ export function Navbar() {
               Pesanan
             </Link>
           )}
+          {user && (
+            <Link
+              to="/library"
+              className="text-sm font-medium text-cream/80 transition hover:text-white"
+            >
+              Pustaka
+            </Link>
+          )}
           {user?.role === 'admin' && (
             <Link
               to="/admin"

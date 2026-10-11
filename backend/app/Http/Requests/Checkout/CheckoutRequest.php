@@ -18,13 +18,13 @@ class CheckoutRequest extends FormRequest
     {
         return [
             'address_id' => [
-                'required',
+                'nullable',
                 'integer',
                 Rule::exists('addresses', 'id')->where('user_id', $this->user()->id),
             ],
-            'payment_method' => ['required', 'in:gdc,cod'],
-            'courier' => ['required', 'string', 'max:100'],
-            'service' => ['required', 'string', 'max:100'],
+            'payment_method' => ['nullable', 'in:gdc,cod'],
+            'courier' => ['nullable', 'string', 'max:100'],
+            'service' => ['nullable', 'string', 'max:100'],
         ];
     }
 }

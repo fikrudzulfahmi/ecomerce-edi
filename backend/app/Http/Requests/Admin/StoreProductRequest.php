@@ -18,7 +18,7 @@ class StoreProductRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'category_id' => ['required', 'integer', 'exists:categories,id'],
-            'type' => ['required', 'in:book,other'],
+            'type' => ['required', 'in:book,other,ebook,bundle'],
             'price' => ['required', 'integer', 'min:0'],
             'weight_gram' => ['nullable', 'integer', 'min:0'],
             'stock' => ['nullable', 'integer', 'min:0'],
@@ -26,6 +26,8 @@ class StoreProductRequest extends FormRequest
             'description' => ['nullable', 'string'],
             'images' => ['nullable', 'array'],
             'images.*' => ['string', 'url'],
+            'digital_file' => ['nullable', 'string', 'max:500'],
+            'bundle_physical_id' => ['nullable', 'integer', 'exists:products,id'],
             'book_detail' => ['nullable', 'array'],
             'book_detail.isbn' => ['nullable', 'string', 'max:50'],
             'book_detail.author' => ['nullable', 'string', 'max:255'],

@@ -1,6 +1,8 @@
+import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { MapPin, Truck } from 'lucide-react'
+import { Download, MapPin, Truck } from 'lucide-react'
 import { useCancelOrder, useOrder } from '../api/hooks'
+import { getDownloadUrl } from '../api/library'
 import { formatRupiah } from '../lib/format'
 import { isCancellable, orderStatusLabel, orderStatusTone } from '../lib/order-status'
 import { Container } from '../components/layout/Container'
@@ -12,6 +14,17 @@ export function OrderDetail() {
   const { code = '' } = useParams()
   const { data: order, isLoading } = useOrder(code)
   const cancel = useCancelOrder()
+  const [downloading, setDownloading] = useState<number | null>(null)
+
+  const handleDownload = async (itemId: number) => {
+    setDownloading(itemId)
+    try {
+      const url = await getDownloadUrl(itemId)
+      window.open(url, '_blank')
+    } finally {
+      setDownloading(null)
+    }
+  }
 
   if (isLoading) {
     return (
@@ -28,6 +41,11 @@ export function OrderDetail() {
       </Container>
     )
   }
+
+  const canDownload =
+    order.payment_method === 'cod'
+      ? order.status === 'COD_COMPLETED'
+      : ['PAID', 'PROCESSING', 'SHIPPED', 'DELIVERED'].includes(order.status)
 
   return (
     <Container className="py-10">
@@ -83,7 +101,18 @@ export function OrderDetail() {
                       </p>
                     </div>
                   </div>
-                  <span className="font-semibold">{formatRupiah(item.subtotal)}</span>
+                  <div className="flex items-center gap-3">
+                    <span className="font-semibold">{formatRupiah(item.subtotal)}</span>
+                    {item.product?.digital_file && canDownload && (
+                      <button
+                        onClick={() => handleDownload(item.id)}
+                        disabled={downloading === item.id}
+                        className="flex items-center gap-1.5 rounded-md bg-navy px-2.5 py-1.5 text-xs font-semibold text-white transition hover:bg-navy-dark disabled:opacity-50"
+                      >
+                        <Download className="h-3.5 w-3.5" /> Unduh
+                      </button>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
