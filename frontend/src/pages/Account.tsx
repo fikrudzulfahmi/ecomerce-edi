@@ -58,7 +58,7 @@ export function Account() {
 
   if (!user) return null
 
-  const isPhoneOnly = user.email.endsWith('@wa.user')
+  const hasPassword = user.has_password
 
   return (
     <Container className="py-10">
@@ -68,9 +68,9 @@ export function Account() {
       <div className="mt-8 grid gap-6 lg:grid-cols-2">
         <section className="rounded-2xl border border-cream-darker bg-white p-6 shadow-card">
           <h2 className="text-lg font-bold">Profil</h2>
-          {isPhoneOnly && (
+          {!hasPassword && (
             <p className="mt-3 rounded-lg bg-orange/10 px-3 py-2 text-xs leading-relaxed text-orange-dark">
-              Akun ini terdaftar lewat WhatsApp. Tambahkan kata sandi di samping agar bisa login dengan email juga.
+              Akun ini masuk lewat Google dan belum punya kata sandi. Buat kata sandi di samping agar bisa login dengan email juga.
             </p>
           )}
           <div className="mt-4 space-y-3">
@@ -94,7 +94,7 @@ export function Account() {
         <section className="rounded-2xl border border-cream-darker bg-white p-6 shadow-card">
           <h2 className="text-lg font-bold">Kata Sandi</h2>
           <div className="mt-4 space-y-3">
-            {!isPhoneOnly && (
+            {hasPassword && (
               <Input
                 label="Kata sandi saat ini"
                 type="password"

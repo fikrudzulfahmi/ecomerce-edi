@@ -53,8 +53,6 @@ export function Register() {
     }
   })
 
-  const onSocialSuccess = () => navigate('/', { replace: true })
-
   return (
     <AuthCard title="Daftar" subtitle="Buat akun untuk mulai berbelanja">
       <form onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>
@@ -114,7 +112,7 @@ export function Register() {
           <span className="h-px flex-1 bg-cream-darker" />
         </div>
 
-        <SocialAuth onSuccess={onSocialSuccess} />
+        <SocialAuth />
 
         <p className="text-center text-sm text-ink-muted">
           Sudah punya akun?{' '}

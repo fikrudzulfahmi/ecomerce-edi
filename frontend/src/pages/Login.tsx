@@ -56,11 +56,6 @@ export function Login() {
     }
   })
 
-  const onSocialSuccess = () => {
-    const from = (location.state as { from?: { pathname: string } } | null)?.from?.pathname ?? '/'
-    navigate(from, { replace: true })
-  }
-
   return (
     <AuthCard title="Masuk" subtitle="Selamat datang kembali!">
       <form onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>
@@ -100,7 +95,7 @@ export function Login() {
           <span className="h-px flex-1 bg-cream-darker" />
         </div>
 
-        <SocialAuth onSuccess={onSocialSuccess} />
+        <SocialAuth />
 
         <p className="text-center text-sm text-ink-muted">
           Belum punya akun?{' '}

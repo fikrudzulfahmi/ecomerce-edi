@@ -12,7 +12,6 @@ import {
   login as apiLogin,
   logout as apiLogout,
   register as apiRegister,
-  verifyPhoneOtp as apiVerifyPhone,
   type RegisterInput,
 } from '../api/auth'
 
@@ -21,7 +20,6 @@ interface AuthState {
   token: string | null
   login: (email: string, password: string) => Promise<void>
   register: (input: RegisterInput) => Promise<void>
-  phoneLogin: (phone: string, code: string) => Promise<void>
   logout: () => Promise<void>
   setAuth: (token: string, user: User) => void
   setUser: (user: User) => void
@@ -41,13 +39,6 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   register: async (input) => {
     const res = await apiRegister(input)
-    setToken(res.token)
-    setStoredUser(res.data)
-    set({ user: res.data, token: res.token })
-  },
-
-  phoneLogin: async (phone, code) => {
-    const res = await apiVerifyPhone(phone, code)
     setToken(res.token)
     setStoredUser(res.data)
     set({ user: res.data, token: res.token })

@@ -1,10 +1,4 @@
-import { useState } from 'react'
-import { useAuthStore } from '../../store/auth'
-import { googleAuthUrl, requestPhoneOtp } from '../../api/auth'
-import { extractErrorMessage } from '../../lib/errors'
-import { Button } from '../ui/Button'
-import { Input } from '../ui/Input'
-import { Alert } from '../ui/Alert'
+import { googleAuthUrl } from '../../api/auth'
 
 function GoogleIcon() {
   return (
@@ -29,106 +23,14 @@ function GoogleIcon() {
   )
 }
 
-export function SocialAuth({ onSuccess }: { onSuccess?: () => void }) {
-  const phoneLogin = useAuthStore((s) => s.phoneLogin)
-  const [phone, setPhone] = useState('')
-  const [code, setCode] = useState('')
-  const [step, setStep] = useState<'phone' | 'otp'>('phone')
-  const [error, setError] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
-
-  const requestOtp = async () => {
-    setError(null)
-    if (!phone.trim()) {
-      setError('Nomor WhatsApp wajib diisi.')
-      return
-    }
-    setLoading(true)
-    try {
-      await requestPhoneOtp(phone.trim())
-      setStep('otp')
-    } catch (err) {
-      setError(extractErrorMessage(err))
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const verify = async () => {
-    setError(null)
-    if (!code.trim()) {
-      setError('Kode OTP wajib diisi.')
-      return
-    }
-    setLoading(true)
-    try {
-      await phoneLogin(phone.trim(), code.trim())
-      onSuccess?.()
-    } catch (err) {
-      setError(extractErrorMessage(err))
-    } finally {
-      setLoading(false)
-    }
-  }
-
+export function SocialAuth() {
   return (
-    <div className="space-y-3">
-      <button
-        type="button"
-        onClick={() => (window.location.href = googleAuthUrl())}
-        className="flex w-full items-center justify-center gap-2 rounded-xl border border-cream-darker bg-white px-4 py-2.5 text-sm font-semibold text-ink transition hover:bg-cream-dark"
-      >
-        <GoogleIcon /> Lanjut dengan Google
-      </button>
-
-      <div className="flex items-center gap-3 text-xs text-ink-muted">
-        <span className="h-px flex-1 bg-cream-darker" />
-        atau
-        <span className="h-px flex-1 bg-cream-darker" />
-      </div>
-
-      {step === 'phone' ? (
-        <div className="space-y-2">
-          <Input
-            label="Nomor WhatsApp"
-            type="tel"
-            placeholder="08xxxxxxxxxx"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-          />
-          <Button type="button" variant="secondary" onClick={requestOtp} loading={loading} className="w-full">
-            Kirim Kode OTP
-          </Button>
-        </div>
-      ) : (
-        <div className="space-y-2">
-          <p className="text-xs text-ink-muted">
-            Kode OTP dikirim ke <span className="font-semibold text-ink">{phone}</span>
-          </p>
-          <Input
-            label="Kode OTP"
-            placeholder="6 digit"
-            inputMode="numeric"
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
-          />
-          <Button type="button" onClick={verify} loading={loading} className="w-full">
-            Verifikasi & Masuk
-          </Button>
-          <button
-            type="button"
-            onClick={() => {
-              setStep('phone')
-              setCode('')
-            }}
-            className="w-full text-center text-xs font-medium text-navy hover:underline"
-          >
-            Ubah nomor
-          </button>
-        </div>
-      )}
-
-      {error && <Alert variant="error">{error}</Alert>}
-    </div>
+    <button
+      type="button"
+      onClick={() => (window.location.href = googleAuthUrl())}
+      className="flex w-full items-center justify-center gap-2 rounded-xl border border-cream-darker bg-white px-4 py-2.5 text-sm font-semibold text-ink transition hover:bg-cream-dark"
+    >
+      <GoogleIcon /> Lanjut dengan Google
+    </button>
   )
 }
