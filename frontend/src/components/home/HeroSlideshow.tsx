@@ -16,37 +16,40 @@ import type { Banner } from '../../lib/types'
 
 function HeroArt() {
   return (
-    <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-[44%] md:block">
-      <div className="relative h-full w-full">
-        {/* rings */}
-        <div className="absolute right-10 top-1/2 h-72 w-72 -translate-y-1/2 rounded-full border-2 border-white/15" />
-        <div className="absolute right-[4.5rem] top-1/2 h-48 w-48 -translate-y-1/2 rounded-full border-2 border-white/20" />
-        <div className="absolute right-[6.75rem] top-1/2 h-28 w-28 -translate-y-1/2 rounded-full bg-white/15 backdrop-blur" />
-        {/* main icon */}
-        <BookOpen className="absolute right-[8rem] top-1/2 h-12 w-12 -translate-y-1/2 text-white" />
-        {/* floating accents */}
+    <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-[42%] items-center justify-center md:flex">
+      <div className="relative h-72 w-72">
+        {/* concentric rings */}
+        <div className="absolute inset-0 rounded-full border-2 border-white/15" />
+        <div className="absolute inset-6 rounded-full border-2 border-white/20" />
+        <div className="absolute inset-[4.25rem] rounded-full bg-white/15 backdrop-blur" />
+        {/* book centered */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <BookOpen className="h-12 w-12 text-white" />
+        </div>
+
+        {/* floating accents orbiting the ring */}
         <PenTool
-          className="animate-float absolute right-12 top-[24%] h-9 w-9 rotate-12 text-orange-light"
+          className="animate-float absolute -right-1 top-5 h-9 w-9 rotate-12 text-orange-light"
           style={{ animationDelay: '0s' }}
         />
         <Gift
-          className="animate-float absolute right-[26%] top-[16%] h-11 w-11 -rotate-6 text-orange"
+          className="animate-float absolute -left-3 top-14 h-11 w-11 -rotate-6 text-orange"
           style={{ animationDelay: '0.5s' }}
         />
         <GraduationCap
-          className="animate-float absolute right-[20%] bottom-[22%] h-9 w-9 -rotate-12 text-white/80"
+          className="animate-float absolute -bottom-1 right-12 h-9 w-9 -rotate-12 text-white/80"
           style={{ animationDelay: '1s' }}
         />
         <Star
-          className="animate-float absolute right-[34%] top-[30%] h-5 w-5 fill-orange-light text-orange-light"
+          className="animate-float absolute -top-1 left-10 h-5 w-5 fill-orange-light text-orange-light"
           style={{ animationDelay: '1.5s' }}
         />
         <Sparkles
-          className="animate-float absolute right-[13%] bottom-[34%] h-5 w-5 text-white/60"
+          className="animate-float absolute -right-2 bottom-12 h-5 w-5 text-white/60"
           style={{ animationDelay: '2s' }}
         />
         <Heart
-          className="animate-float absolute right-[30%] bottom-[10%] h-6 w-6 rotate-6 text-white/50"
+          className="animate-float absolute bottom-[-1.5rem] left-16 h-6 w-6 rotate-6 text-white/50"
           style={{ animationDelay: '0.8s' }}
         />
       </div>
