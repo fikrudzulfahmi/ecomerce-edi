@@ -1,8 +1,10 @@
 import axios from 'axios'
 import { clearStoredUser, clearToken, getToken } from '../lib/token'
 
+const API_BASE = import.meta.env.VITE_API_BASE_URL || ''
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || '/api/v1',
+  baseURL: `${API_BASE}/api/v1`,
   headers: {
     Accept: 'application/json',
   },
