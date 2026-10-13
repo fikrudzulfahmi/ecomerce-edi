@@ -30,3 +30,6 @@ phpunit.xml
 Thumbs.db
 .idea/
 .vscode/
+
+# snapshot lokal (Hermes)
+backup/
