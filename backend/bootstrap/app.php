@@ -19,6 +19,13 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => RoleMiddleware::class,
         ]);
+
+        // Callback iPaymu ditandatangani dari payload mentah. Konversi string
+        // kosong → null (middleware global Laravel) mengubah hash sehingga
+        // signature asli dianggap tidak valid.
+        $middleware->convertEmptyStringsToNull(except: [
+            'api/v1/webhooks/ipaymu',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->render(function (BusinessException $e, Request $request) {
