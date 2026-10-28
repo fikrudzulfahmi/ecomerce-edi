@@ -49,4 +49,4 @@ Branch per fase (belum di-merge ke `main`):
 
 ## Berikutnya
 
-Fase 8 — Pembayaran GDC asli (tunggu dokumentasi resmi + kredensial sandbox GDC; ganti `MockPaymentProvider` → `GdcPaymentProvider`, webhook pembayaran). Setelah itu Fase 10 — hardening & rilis (gambar produk asli, konten legal, uji beban, deploy).
+Fase 8 — pembayaran **iPayMu** sudah terpasang (sandbox, lihat `docs/PAYMENT-IPAYMU.md`). Sisa: deploy env produksi + uji transaksi nyata di `store.edisjournal.my.id`. Setelah itu Fase 10 — hardening & rilis (gambar produk asli, konten legal, uji beban).

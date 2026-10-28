@@ -102,7 +102,7 @@ export type OrderStatus =
   | 'COD_COMPLETED'
   | 'COD_RETURNED'
 
-export type PaymentMethodType = 'gdc' | 'cod'
+export type PaymentMethodType = 'online' | 'cod'
 
 export interface OrderAddress {
   recipient: string
@@ -128,6 +128,11 @@ export interface OrderPayment {
   status: string
   external_ref: string | null
   paid_at: string | null
+  channel?: string | null
+  via?: string | null
+  payment_no?: string | null
+  trx_id?: string | null
+  redirect_url?: string | null
 }
 
 export interface OrderShipment {

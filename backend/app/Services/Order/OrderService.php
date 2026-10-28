@@ -14,6 +14,7 @@ use App\Models\Setting;
 use App\Models\User;
 use App\Models\Voucher;
 use App\Services\Payment\PaymentProviderInterface;
+use App\Services\Payment\PaymentResult;
 use App\Services\Shipping\ShippingOption;
 use App\Services\Stock\StockService;
 use Illuminate\Support\Facades\DB;
@@ -47,8 +48,8 @@ class OrderService
             throw new BusinessException('Alamat dan kurir wajib untuk produk fisik.');
         }
 
-        if (! $hasPhysical && $method !== PaymentMethod::Gdc) {
-            throw new BusinessException('Produk digital hanya bisa dibayar online (GDC).');
+        if (! $hasPhysical && ! $method->isOnline()) {
+            throw new BusinessException('Produk digital hanya bisa dibayar online.');
         }
 
         return DB::transaction(function () use ($user, $address, $method, $shipping, $items, $hasPhysical, $voucher, $discount): Order {
@@ -89,7 +90,7 @@ class OrderService
 
             $order = $user->orders()->create([
                 'code' => $this->generateCode(),
-                'status' => $method === PaymentMethod::Gdc
+                'status' => $method->isOnline()
                     ? OrderStatus::PendingPayment
                     : OrderStatus::CodPending,
                 'subtotal' => $subtotal,
@@ -101,7 +102,7 @@ class OrderService
                 'total' => $total,
                 'payment_method' => $method,
                 'address_snapshot' => $address ? $this->snapshotAddress($address) : null,
-                'expires_at' => $method === PaymentMethod::Gdc ? now()->addHours(2) : null,
+                'expires_at' => $method->isOnline() ? now()->addHours(2) : null,
             ]);
 
             foreach ($orderItems as $data) {
@@ -123,16 +124,40 @@ class OrderService
                 ]);
             }
 
-            if ($method === PaymentMethod::Gdc) {
-                $this->payment->createTransaction($order);
-            }
-
             if ($voucher) {
                 $voucher->increment('used_count');
             }
 
             return $order->load('items.product', 'payment', 'shipment');
         });
+    }
+
+    /**
+     * Buat sesi pembayaran (dipanggil setelah order ter-commit, jadi gangguan
+     * di gateway tidak membatalkan order/keranjang).
+     */
+    public function startPayment(Order $order): PaymentResult
+    {
+        if (! $order->payment_method?->isOnline()) {
+            throw new BusinessException('Pesanan ini tidak memakai pembayaran online.');
+        }
+
+        if ($order->status !== OrderStatus::PendingPayment) {
+            throw new BusinessException('Pesanan ini tidak menunggu pembayaran.');
+        }
+
+        $existing = $order->payment;
+        $url = (string) ($existing?->raw_payload['url'] ?? '');
+        $stillValid = $order->expires_at === null || $order->expires_at->isFuture();
+
+        if ($existing && $existing->status === 'pending' && $url !== '' && $stillValid) {
+            return new PaymentResult(payment: $existing, redirectUrl: $url);
+        }
+
+        $result = $this->payment->createTransaction($order);
+        $order->setRelation('payment', $result->payment);
+
+        return $result;
     }
 
     public function cancel(Order $order): void
@@ -148,14 +173,30 @@ class OrderService
         });
     }
 
-    public function markPaid(Order $order): void
+    /**
+     * @param  array<string, mixed>  $paymentPayload  Data tambahan (trx_id, channel, callback).
+     */
+    public function markPaid(Order $order, array $paymentPayload = []): void
     {
         if ($order->status !== OrderStatus::PendingPayment) {
             return;
         }
 
-        DB::transaction(function () use ($order): void {
-            $order->payment()->update(['status' => 'paid', 'paid_at' => now()]);
+        DB::transaction(function () use ($order, $paymentPayload): void {
+            $payment = $order->payment;
+            $attributes = [
+                'provider' => $payment?->provider ?? 'ipaymu',
+                'status' => 'paid',
+                'paid_at' => now(),
+                'raw_payload' => array_merge($payment?->raw_payload ?? [], $paymentPayload),
+            ];
+
+            if ($payment) {
+                $payment->update($attributes);
+            } else {
+                $order->payment()->create($attributes);
+            }
+
             $order->update([
                 'status' => $this->isDigitalOnly($order) ? OrderStatus::Delivered : OrderStatus::Paid,
             ]);

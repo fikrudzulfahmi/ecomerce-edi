@@ -70,7 +70,7 @@ class CheckoutController
             }
 
             $address = $user->addresses()->findOrFail($addressId);
-            $method = PaymentMethod::from($request->validated('payment_method') ?? 'gdc');
+            $method = PaymentMethod::from($request->validated('payment_method') ?? 'online');
 
             $weight = $items->sum(
                 fn ($item) => $item->product->isEbook() ? 0 : $item->qty * $item->product->weight_gram,
@@ -89,7 +89,7 @@ class CheckoutController
             $shippingCost = $option->cost;
         } else {
             $address = null;
-            $method = PaymentMethod::Gdc;
+            $method = PaymentMethod::Online;
             $option = null;
             $shippingCost = 0;
         }
@@ -104,7 +104,19 @@ class CheckoutController
 
         $order = $this->orderService->createFromCart($user, $address, $method, $option, $voucher, $discount);
 
-        return response()->json(['data' => new OrderResource($order)], 201);
+        if ($method->isOnline()) {
+            try {
+                $this->orderService->startPayment($order);
+            } catch (\Throwable $e) {
+                // Order tetap dibuat; pembeli bisa membuat ulang sesi pembayaran
+                // dari halaman pembayaran.
+                report($e);
+            }
+        }
+
+        return response()->json([
+            'data' => new OrderResource($order->fresh(['items.product', 'payment', 'shipment'])),
+        ], 201);
     }
 
     public function meta(): JsonResponse

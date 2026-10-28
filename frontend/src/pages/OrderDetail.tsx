@@ -209,7 +209,22 @@ export function OrderDetail() {
               <span>Total</span>
               <span className="text-orange-dark">{formatRupiah(order.total)}</span>
             </div>
+            <div className="flex justify-between text-ink-muted">
+              <span>Pembayaran</span>
+              <span>
+                {order.payment_method === 'cod' ? 'COD' : 'Online (iPaymu)'}
+              </span>
+            </div>
           </div>
+
+          {order.status === 'PENDING_PAYMENT' && (
+            <Link
+              to={`/payment/${order.code}`}
+              className="mt-4 block w-full rounded-md bg-orange px-4 py-2.5 text-center font-semibold text-navy-dark transition hover:bg-orange-dark"
+            >
+              Lanjutkan Pembayaran
+            </Link>
+          )}
 
           {isCancellable(order.status) && (
             <Button
