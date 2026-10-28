@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Models\Address;
+use App\Models\Payment;
 use App\Models\Product;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -54,7 +55,7 @@ class CheckoutTest extends TestCase
             ->assertJsonStructure(['data' => [['courier', 'service', 'cost']]]);
     }
 
-    public function test_checkout_with_gdc_creates_order_and_reduces_stock(): void
+    public function test_checkout_with_online_payment_creates_pending_payment_session(): void
     {
         $user = $this->verifiedUser();
         Sanctum::actingAs($user);
@@ -66,18 +67,45 @@ class CheckoutTest extends TestCase
 
         $this->postJson('/api/v1/checkout', [
             'address_id' => $address->id,
-            'payment_method' => 'gdc',
+            'payment_method' => 'online',
             'courier' => 'JNE',
             'service' => 'REG',
         ])
             ->assertCreated()
             ->assertJsonPath('data.status', 'PENDING_PAYMENT')
-            ->assertJsonPath('data.payment_method', 'gdc')
-            ->assertJsonPath('data.subtotal', 100_000);
+            ->assertJsonPath('data.payment_method', 'online')
+            ->assertJsonPath('data.subtotal', 100_000)
+            ->assertJsonPath('data.payment.status', 'pending')
+            ->assertJsonStructure(['data' => ['payment' => ['redirect_url']]]);
 
         $this->assertDatabaseHas('products', ['id' => $product->id, 'stock' => 8]);
-        $this->assertDatabaseHas('payments', ['provider' => 'gdc', 'status' => 'pending']);
+        $this->assertDatabaseHas('payments', ['provider' => 'mock', 'status' => 'pending']);
         $this->getJson('/api/v1/cart')->assertJsonPath('data.total_items', 0);
+    }
+
+    public function test_pending_order_can_request_payment_session_again(): void
+    {
+        $user = $this->verifiedUser();
+        Sanctum::actingAs($user);
+
+        $product = Product::factory()->create(['stock' => 5, 'price' => 20_000, 'weight_gram' => 500]);
+        $address = $this->addressFor($user);
+        $this->postJson('/api/v1/cart/items', ['product_id' => $product->id, 'qty' => 1]);
+
+        $code = $this->postJson('/api/v1/checkout', [
+            'address_id' => $address->id,
+            'payment_method' => 'online',
+            'courier' => 'JNE',
+            'service' => 'REG',
+        ])->json('data.code');
+
+        $this->postJson("/api/v1/orders/{$code}/payment")
+            ->assertOk()
+            ->assertJsonPath('data.status', 'PENDING_PAYMENT')
+            ->assertJsonStructure(['redirect_url']);
+
+        // Sesi pending yang masih valid dipakai ulang, bukan duplikat.
+        $this->assertSame(1, Payment::query()->where('order_id', $user->orders()->first()->id)->count());
     }
 
     public function test_checkout_with_cod_creates_shipment_with_cod_amount(): void

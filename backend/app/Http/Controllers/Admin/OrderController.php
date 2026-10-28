@@ -9,13 +9,17 @@ use App\Exceptions\BusinessException;
 use App\Http\Requests\Admin\ChangeOrderStatusRequest;
 use App\Http\Resources\OrderResource;
 use App\Models\Order;
+use App\Services\Order\OrderService;
 use App\Services\Shipping\MengantarProvider;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class OrderController
 {
-    public function __construct(private readonly MengantarProvider $shipping) {}
+    public function __construct(
+        private readonly MengantarProvider $shipping,
+        private readonly OrderService $orders,
+    ) {}
 
     public function index(Request $request): JsonResponse
     {
@@ -52,13 +56,12 @@ class OrderController
             throw new BusinessException('Pesanan tidak menunggu pembayaran.');
         }
 
-        $order->payment()->updateOrCreate(
-            ['order_id' => $order->id],
-            ['provider' => 'gdc', 'status' => 'paid', 'paid_at' => now()],
-        );
-        $order->update(['status' => OrderStatus::Paid]);
+        $this->orders->markPaid($order, [
+            'confirmed_by' => 'admin',
+            'confirmed_at' => now()->toIso8601String(),
+        ]);
 
-        return response()->json(['data' => new OrderResource($order->load(['payment', 'shipment']))]);
+        return response()->json(['data' => new OrderResource($order->fresh(['payment', 'shipment']))]);
     }
 
     public function createShipment(string $code): JsonResponse

@@ -11,10 +11,10 @@ import {
 import { checkout, fetchShippingOptions, type CheckoutInput } from './checkout'
 import {
   cancelOrder,
+  createOrderPayment,
   fetchOrder,
   fetchOrders,
-  mockFailOrder,
-  mockPayOrder,
+  syncOrderPayment,
 } from './orders'
 import { fetchLibrary } from './library'
 import { useAuthStore } from '../store/auth'
@@ -139,6 +139,9 @@ export function useOrder(code: string) {
     queryKey: ['order', code],
     queryFn: () => fetchOrder(code),
     enabled: !!code,
+    // Polling ringan selama menunggu pembayaran (callback iPaymu asinkron).
+    refetchInterval: (query) =>
+      query.state.data?.status === 'PENDING_PAYMENT' ? 10_000 : false,
   })
 }
 
@@ -153,19 +156,29 @@ export function useCancelOrder() {
   })
 }
 
-export function useMockPay() {
+export function useCreatePayment() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (code: string) => mockPayOrder(code),
-    onSuccess: (order, code) => queryClient.setQueryData(['order', code], order),
+    mutationFn: (code: string) => createOrderPayment(code),
+    onSuccess: ({ order, redirectUrl }, code) => {
+      queryClient.setQueryData(['order', code], order)
+      if (!redirectUrl) return
+      // Arahkan ke halaman pembayaran iPaymu.
+      if (!redirectUrl.startsWith(window.location.origin)) {
+        window.location.assign(redirectUrl)
+      }
+    },
   })
 }
 
-export function useMockFail() {
+export function useSyncPayment() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (code: string) => mockFailOrder(code),
-    onSuccess: (order, code) => queryClient.setQueryData(['order', code], order),
+    mutationFn: (code: string) => syncOrderPayment(code),
+    onSuccess: (order, code) => {
+      queryClient.setQueryData(['order', code], order)
+      queryClient.invalidateQueries({ queryKey: ['orders'] })
+    },
   })
 }
 

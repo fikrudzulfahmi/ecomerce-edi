@@ -1,18 +1,39 @@
-import { Link, useNavigate, useParams } from 'react-router-dom'
-import { CheckCircle2, XCircle } from 'lucide-react'
-import { useMockFail, useMockPay, useOrder } from '../api/hooks'
+import { useEffect, useMemo, useRef } from 'react'
+import { Link, useParams } from 'react-router-dom'
+import { CheckCircle2, Clock, ExternalLink, RefreshCw, XCircle } from 'lucide-react'
+import { useCreatePayment, useOrder, useSyncPayment } from '../api/hooks'
 import { formatRupiah } from '../lib/format'
 import { Container } from '../components/layout/Container'
 import { Button } from '../components/ui/Button'
 import { Alert } from '../components/ui/Alert'
 import { Skeleton } from '../components/ui/Skeleton'
 
+const PAID_STATUSES = ['PAID', 'PROCESSING', 'SHIPPED', 'DELIVERED']
+
 export function Payment() {
   const { code = '' } = useParams()
-  const navigate = useNavigate()
   const { data: order, isLoading } = useOrder(code)
-  const mockPay = useMockPay()
-  const mockFail = useMockFail()
+  const createPayment = useCreatePayment()
+  const syncPayment = useSyncPayment()
+  const autoCreated = useRef(false)
+
+  const pending = order?.status === 'PENDING_PAYMENT'
+  const redirectUrl = order?.payment?.redirect_url ?? null
+
+  // Order lama / sesi gagal dibuat: minta sesi pembayaran baru sekali.
+  useEffect(() => {
+    if (!pending || redirectUrl || autoCreated.current) return
+    autoCreated.current = true
+    createPayment.mutate(code)
+  }, [pending, redirectUrl, code, createPayment])
+
+  const expiresAt = useMemo(() => {
+    if (!order?.expires_at) return null
+    return new Date(order.expires_at).toLocaleString('id-ID', {
+      dateStyle: 'medium',
+      timeStyle: 'short',
+    })
+  }, [order?.expires_at])
 
   if (isLoading) {
     return (
@@ -30,7 +51,7 @@ export function Payment() {
     )
   }
 
-  if (order.status === 'PAID') {
+  if (PAID_STATUSES.includes(order.status)) {
     return (
       <Container className="py-16 text-center">
         <CheckCircle2 className="mx-auto h-14 w-14 text-green-600" />
@@ -50,7 +71,9 @@ export function Payment() {
     return (
       <Container className="py-16 text-center">
         <XCircle className="mx-auto h-14 w-14 text-red-500" />
-        <h1 className="mt-4 text-2xl font-bold">Pembayaran {order.status === 'EXPIRED' ? 'Kedaluwarsa' : 'Dibatalkan'}</h1>
+        <h1 className="mt-4 text-2xl font-bold">
+          Pembayaran {order.status === 'EXPIRED' ? 'Kedaluwarsa' : 'Dibatalkan'}
+        </h1>
         <p className="mt-2 text-ink-muted">Pesanan {order.code} tidak dapat diproses.</p>
         <Link to="/orders" className="mt-6 inline-block font-semibold text-navy hover:underline">
           Kembali ke Pesanan
@@ -59,47 +82,89 @@ export function Payment() {
     )
   }
 
+  if (order.status === 'COD_PENDING') {
+    return (
+      <Container className="py-16 text-center">
+        <h1 className="text-2xl font-bold">Pesanan COD</h1>
+        <p className="mt-2 text-ink-muted">
+          Pesanan {order.code} dibayar di tempat saat barang diterima.
+        </p>
+        <Link
+          to={`/orders/${order.code}`}
+          className="mt-6 inline-block font-semibold text-navy hover:underline"
+        >
+          Lihat Pesanan
+        </Link>
+      </Container>
+    )
+  }
+
+  const channel = order.payment?.channel || order.payment?.via
+    ? [order.payment?.via, order.payment?.channel].filter(Boolean).join(' · ')
+    : null
+
   return (
     <Container className="py-10">
       <div className="mx-auto max-w-md">
         <div className="rounded-xl border border-cream-darker bg-white p-6">
-          <h1 className="text-xl font-bold">Simulasi Pembayaran GDC</h1>
-          <p className="mt-1 text-sm text-ink-muted">
-            Ini halaman mock — pembayaran asli menyusul di Fase 8.
-          </p>
+          <h1 className="text-xl font-bold">Pembayaran</h1>
+          <p className="mt-1 text-sm text-ink-muted">Pesanan {order.code} menunggu pembayaran.</p>
 
           <div className="mt-4 rounded-lg bg-cream-dark p-4 text-center">
             <p className="text-sm text-ink-muted">Total pembayaran</p>
             <p className="text-3xl font-bold text-orange-dark">{formatRupiah(order.total)}</p>
-            <p className="mt-1 text-xs text-ink-muted">Order {order.code}</p>
+            {channel && <p className="mt-1 text-xs text-ink-muted">{channel}</p>}
           </div>
 
-          {mockPay.isError && (
+          {expiresAt && (
+            <p className="mt-3 flex items-center justify-center gap-1 text-xs text-ink-muted">
+              <Clock className="h-3.5 w-3.5" /> Selesaikan sebelum {expiresAt}
+            </p>
+          )}
+
+          {(createPayment.isError || syncPayment.isError) && (
             <div className="mt-3">
-              <Alert variant="error">Gagal memproses pembayaran.</Alert>
+              <Alert variant="error">
+                Gagal menghubungi layanan pembayaran. Silakan coba lagi.
+              </Alert>
             </div>
           )}
 
           <div className="mt-5 space-y-2">
+            {redirectUrl ? (
+              <Button className="w-full" onClick={() => window.location.assign(redirectUrl)}>
+                <ExternalLink className="h-4 w-4" /> Lanjutkan ke Pembayaran
+              </Button>
+            ) : (
+              <Button
+                className="w-full"
+                onClick={() => createPayment.mutate(code)}
+                loading={createPayment.isPending}
+              >
+                <ExternalLink className="h-4 w-4" /> Buat Pembayaran
+              </Button>
+            )}
+
             <Button
+              variant="ghost"
               className="w-full"
-              onClick={() => mockPay.mutate(order.code)}
-              loading={mockPay.isPending}
+              onClick={() => syncPayment.mutate(code)}
+              loading={syncPayment.isPending}
             >
-              <CheckCircle2 className="h-4 w-4" /> Simulasikan Pembayaran Berhasil
+              <RefreshCw className="h-4 w-4" /> Cek Status Pembayaran
             </Button>
-            <Button
-              variant="danger"
-              className="w-full"
-              onClick={() => mockFail.mutate(order.code)}
-              loading={mockFail.isPending}
+            <Link
+              to={`/orders/${order.code}`}
+              className="block w-full pt-1 text-center text-sm font-semibold text-navy hover:underline"
             >
-              <XCircle className="h-4 w-4" /> Simulasikan Gagal
-            </Button>
-            <Button variant="ghost" className="w-full" onClick={() => navigate(`/orders/${order.code}`)}>
               Kembali ke Pesanan
-            </Button>
+            </Link>
           </div>
+
+          <p className="mt-4 text-center text-xs text-ink-muted">
+            Pembayaran diproses oleh iPaymu (Virtual Account, QRIS, atau e-Wallet). Status
+            pesanan diperbarui otomatis setelah pembayaran dikonfirmasi.
+          </p>
         </div>
       </div>
     </Container>

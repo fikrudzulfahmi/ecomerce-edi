@@ -26,12 +26,19 @@ export async function cancelOrder(code: string): Promise<Order> {
   return data.data
 }
 
-export async function mockPayOrder(code: string): Promise<Order> {
-  const { data } = await api.post<{ data: Order }>(`/orders/${code}/mock-pay`)
-  return data.data
+export async function createOrderPayment(
+  code: string,
+): Promise<{ order: Order; redirectUrl: string | null }> {
+  const { data } = await api.post<{ data: Order; redirect_url: string | null }>(
+    `/orders/${code}/payment`,
+  )
+  return {
+    order: data.data,
+    redirectUrl: data.redirect_url ?? data.data.payment?.redirect_url ?? null,
+  }
 }
 
-export async function mockFailOrder(code: string): Promise<Order> {
-  const { data } = await api.post<{ data: Order }>(`/orders/${code}/mock-fail`)
+export async function syncOrderPayment(code: string): Promise<Order> {
+  const { data } = await api.post<{ data: Order }>(`/orders/${code}/payment/sync`)
   return data.data
 }

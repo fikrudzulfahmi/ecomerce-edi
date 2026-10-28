@@ -117,6 +117,56 @@ export function AdminOrderDetail() {
 
           <section className="rounded-lg border border-cream-darker bg-white p-5">
             <h2 className="flex items-center gap-2 font-bold text-navy">
+              <CreditCard className="h-4 w-4" /> Pembayaran
+            </h2>
+            <dl className="mt-2 space-y-1 text-sm">
+              <div className="flex justify-between">
+                <dt className="text-ink-muted">Metode</dt>
+                <dd>{order.payment_method === 'cod' ? 'COD' : 'Online (iPaymu)'}</dd>
+              </div>
+              {order.payment && (
+                <>
+                  <div className="flex justify-between">
+                    <dt className="text-ink-muted">Provider</dt>
+                    <dd className="uppercase">{order.payment.provider}</dd>
+                  </div>
+                  <div className="flex justify-between">
+                    <dt className="text-ink-muted">Status</dt>
+                    <dd>{order.payment.status}</dd>
+                  </div>
+                  {order.payment.channel && (
+                    <div className="flex justify-between">
+                      <dt className="text-ink-muted">Channel</dt>
+                      <dd>
+                        {[order.payment.via, order.payment.channel].filter(Boolean).join(' · ')}
+                      </dd>
+                    </div>
+                  )}
+                  {order.payment.payment_no && (
+                    <div className="flex justify-between">
+                      <dt className="text-ink-muted">No. Pembayaran</dt>
+                      <dd className="font-mono">{order.payment.payment_no}</dd>
+                    </div>
+                  )}
+                  {order.payment.trx_id && (
+                    <div className="flex justify-between">
+                      <dt className="text-ink-muted">Trx iPaymu</dt>
+                      <dd className="font-mono">{order.payment.trx_id}</dd>
+                    </div>
+                  )}
+                  {order.payment.paid_at && (
+                    <div className="flex justify-between">
+                      <dt className="text-ink-muted">Dibayar</dt>
+                      <dd>{new Date(order.payment.paid_at).toLocaleString('id-ID')}</dd>
+                    </div>
+                  )}
+                </>
+              )}
+            </dl>
+          </section>
+
+          <section className="rounded-lg border border-cream-darker bg-white p-5">
+            <h2 className="flex items-center gap-2 font-bold text-navy">
               <MapPin className="h-4 w-4" /> Alamat
             </h2>
             <p className="mt-2 text-sm">

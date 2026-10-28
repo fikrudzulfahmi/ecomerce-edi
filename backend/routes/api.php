@@ -20,10 +20,12 @@ use App\Http\Controllers\Api\ChatController;
 use App\Http\Controllers\Api\CheckoutController;
 use App\Http\Controllers\Api\DownloadController;
 use App\Http\Controllers\Api\EmailVerificationController;
+use App\Http\Controllers\Api\IpaymuWebhookController;
 use App\Http\Controllers\Api\LibraryController;
 use App\Http\Controllers\Api\MengantarWebhookController;
 use App\Http\Controllers\Api\MockPaymentController;
 use App\Http\Controllers\Api\OrderController;
+use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\ReviewController;
@@ -42,6 +44,10 @@ Route::prefix('v1')->group(function (): void {
 
     // Webhook Mengantar (publik, diverifikasi HMAC)
     Route::post('/webhooks/mengantar', MengantarWebhookController::class)
+        ->withoutMiddleware('throttle:api');
+
+    // Webhook iPaymu (publik, diverifikasi signature HMAC-SHA256)
+    Route::post('/webhooks/ipaymu', IpaymuWebhookController::class)
         ->withoutMiddleware('throttle:api');
 
     // Download file digital (link tertanda tangan, kadaluarsa 24 jam)
@@ -92,6 +98,8 @@ Route::prefix('v1')->group(function (): void {
         Route::get('/orders', [OrderController::class, 'index']);
         Route::get('/orders/{code}', [OrderController::class, 'show']);
         Route::post('/orders/{code}/cancel', [OrderController::class, 'cancel']);
+        Route::post('/orders/{code}/payment', [PaymentController::class, 'store']);
+        Route::post('/orders/{code}/payment/sync', [PaymentController::class, 'sync']);
 
         // Pustaka (ebook yang sudah dibeli)
         Route::get('/library', [LibraryController::class, 'index']);
@@ -106,9 +114,11 @@ Route::prefix('v1')->group(function (): void {
         Route::get('/chat/conversations/{conversation}/messages', [ChatController::class, 'messages']);
         Route::post('/chat/conversations/{conversation}/messages', [ChatController::class, 'send']);
 
-        // Simulasi pembayaran GDC (Fase 6, diganti webhook Fase 8)
-        Route::post('/orders/{code}/mock-pay', [MockPaymentController::class, 'success']);
-        Route::post('/orders/{code}/mock-fail', [MockPaymentController::class, 'failure']);
+        // Simulasi pembayaran (hanya aktif bila PAYMENT_DRIVER=mock)
+        if (config('payment.driver') === 'mock') {
+            Route::post('/orders/{code}/mock-pay', [MockPaymentController::class, 'success']);
+            Route::post('/orders/{code}/mock-fail', [MockPaymentController::class, 'failure']);
+        }
     });
 
     // Panel admin

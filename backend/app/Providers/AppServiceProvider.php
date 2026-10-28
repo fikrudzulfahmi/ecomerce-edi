@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use App\Models\User;
+use App\Services\Payment\IpaymuClient;
+use App\Services\Payment\IpaymuPaymentProvider;
 use App\Services\Payment\MockPaymentProvider;
 use App\Services\Payment\PaymentProviderInterface;
 use App\Services\Shipping\MengantarClient;
@@ -12,13 +14,27 @@ use App\Services\Shipping\ShippingProviderInterface;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
+use RuntimeException;
 
 class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        // Payment: mock (Fase 6). Fase 8: ganti ke GdcPaymentProvider.
-        $this->app->bind(PaymentProviderInterface::class, MockPaymentProvider::class);
+        $this->app->singleton(IpaymuClient::class, function (): IpaymuClient {
+            return new IpaymuClient(
+                (string) config('ipaymu.base_url'),
+                (string) config('ipaymu.va'),
+                (string) config('ipaymu.api_key'),
+            );
+        });
+
+        $this->app->bind(PaymentProviderInterface::class, function (): PaymentProviderInterface {
+            return match ((string) config('payment.driver')) {
+                'ipaymu' => $this->app->make(IpaymuPaymentProvider::class),
+                'mock' => $this->app->make(MockPaymentProvider::class),
+                default => throw new RuntimeException('PAYMENT_DRIVER tidak dikenal: '.config('payment.driver')),
+            };
+        });
 
         $this->app->singleton(MengantarClient::class, function (): MengantarClient {
             return new MengantarClient(

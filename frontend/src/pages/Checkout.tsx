@@ -22,7 +22,7 @@ export function Checkout() {
 
   const [addressId, setAddressId] = useState<number | null>(null)
   const [shipping, setShipping] = useState<string | null>(null)
-  const [method, setMethod] = useState<PaymentMethodType>('gdc')
+  const [method, setMethod] = useState<PaymentMethodType>('online')
   const [error, setError] = useState<string | null>(null)
   const [voucherCode, setVoucherCode] = useState('')
   const [voucherPreview, setVoucherPreview] = useState<VoucherPreview | null>(null)
@@ -110,15 +110,21 @@ export function Checkout() {
           service: selectedShipping.service,
           voucher_code: voucherCode.trim() || undefined,
         })
-        navigate(method === 'gdc' ? `/payment/${order.code}` : `/orders/${order.code}`, {
-          replace: true,
-        })
+        if (order.payment?.redirect_url) {
+          window.location.assign(order.payment.redirect_url)
+        } else {
+          navigate(`/payment/${order.code}`, { replace: true })
+        }
       } else {
         const order = await checkoutMutation.mutateAsync({
-          payment_method: 'gdc',
+          payment_method: 'online',
           voucher_code: voucherCode.trim() || undefined,
         })
-        navigate(`/payment/${order.code}`, { replace: true })
+        if (order.payment?.redirect_url) {
+          window.location.assign(order.payment.redirect_url)
+        } else {
+          navigate(`/payment/${order.code}`, { replace: true })
+        }
       }
     } catch (err) {
       setError(extractErrorMessage(err))
@@ -257,19 +263,19 @@ export function Checkout() {
             <div className="mt-4 space-y-2">
               <label
                 className={`flex cursor-pointer items-center justify-between rounded-md border p-3 ${
-                  method === 'gdc' ? 'border-navy bg-navy/5' : 'border-cream-darker'
+                  method === 'online' ? 'border-navy bg-navy/5' : 'border-cream-darker'
                 }`}
               >
                 <span className="flex items-center gap-3 text-sm">
                   <input
                     type="radio"
                     name="method"
-                    checked={method === 'gdc'}
-                    onChange={() => setMethod('gdc')}
+                    checked={method === 'online'}
+                    onChange={() => setMethod('online')}
                     className="h-4 w-4 text-navy"
                   />
-                  <span className="font-semibold">GDC Payment</span>
-                  <span className="text-ink-muted">Transfer / online</span>
+                  <span className="font-semibold">Bayar Online</span>
+                  <span className="text-ink-muted">VA / QRIS / e-Wallet (iPaymu)</span>
                 </span>
               </label>
               {hasPhysical && (
@@ -367,7 +373,7 @@ export function Checkout() {
             disabled={notVerified}
           >
             {hasPhysical
-              ? method === 'gdc'
+              ? method === 'online'
                 ? 'Buat Pesanan & Bayar'
                 : 'Buat Pesanan (COD)'
               : 'Beli & Bayar'}

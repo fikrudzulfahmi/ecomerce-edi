@@ -22,7 +22,7 @@ class CheckoutRequest extends FormRequest
                 'integer',
                 Rule::exists('addresses', 'id')->where('user_id', $this->user()->id),
             ],
-            'payment_method' => ['nullable', 'in:gdc,cod'],
+            'payment_method' => ['nullable', 'in:online,cod,gdc'],
             'courier' => ['nullable', 'string', 'max:100'],
             'service' => ['nullable', 'string', 'max:100'],
             'voucher_code' => ['nullable', 'string', 'max:50'],
