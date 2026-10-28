@@ -24,7 +24,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // kosong → null (middleware global Laravel) mengubah hash sehingga
         // signature asli dianggap tidak valid.
         $middleware->convertEmptyStringsToNull(except: [
-            'api/v1/webhooks/ipaymu',
+            static fn (Request $request) => $request->is('api/v1/webhooks/ipaymu'),
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
