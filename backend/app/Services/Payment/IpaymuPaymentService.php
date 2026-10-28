@@ -37,37 +37,42 @@ class IpaymuPaymentService
 
         $trxId = (string) ($payment->raw_payload['trx_id'] ?? '');
 
-        if ($trxId === '') {
-            $trxId = $this->findTrxIdByReference($order);
-        }
+        // iPaymu mengizinkan cek transaksi lewat TransactionId, ReferenceId
+        // (kode order), atau SessionId. Dicoba berurutan supaya tombol
+        // "Cek status pembayaran" tetap berfungsi apa pun yang tersimpan.
+        $candidates = array_values(array_unique(array_filter([
+            $trxId,
+            $this->findTrxIdByReference($order),
+            (string) $payment->external_ref,
+            $order->code,
+        ])));
 
-        if ($trxId === '') {
-            return;
-        }
+        foreach ($candidates as $candidate) {
+            try {
+                $data = $this->client->checkTransaction($candidate);
+            } catch (Throwable $e) {
+                Log::warning('Sync pembayaran iPaymu gagal', [
+                    'order' => $order->code,
+                    'candidate' => $candidate,
+                    'error' => $e->getMessage(),
+                ]);
 
-        try {
-            $data = $this->client->checkTransaction($trxId);
-        } catch (Throwable $e) {
-            Log::warning('Sync pembayaran iPaymu gagal', [
-                'order' => $order->code,
-                'error' => $e->getMessage(),
+                continue;
+            }
+
+            if (! IpaymuStatus::isPaid($data)) {
+                continue;
+            }
+
+            $this->orders->markPaid($order, [
+                'trx_id' => (string) ($data['TransactionId'] ?? $candidate),
+                'via' => (string) ($payment->raw_payload['via'] ?? ($data['TypeDesc'] ?? '')),
+                'channel' => (string) ($payment->raw_payload['channel'] ?? ($data['PaymentChannel'] ?? '')),
+                'checked' => $data,
             ]);
 
             return;
         }
-
-        $status = (int) ($data['Status'] ?? 0);
-
-        if (! in_array($status, [1, 6], true)) {
-            return;
-        }
-
-        $this->orders->markPaid($order, [
-            'trx_id' => $trxId,
-            'via' => (string) ($payment->raw_payload['via'] ?? ''),
-            'channel' => (string) ($payment->raw_payload['channel'] ?? ''),
-            'checked' => $data,
-        ]);
     }
 
     /**
@@ -101,7 +106,7 @@ class IpaymuPaymentService
 
             $reference = (string) ($row['ReferenceId'] ?? $row['reference_id'] ?? '');
 
-            if ($reference === $order->code && (int) ($row['Status'] ?? 0) === 1) {
+            if ($reference === $order->code && IpaymuStatus::isPaid($row)) {
                 return (string) ($row['TransactionId'] ?? $row['trx_id'] ?? '');
             }
         }

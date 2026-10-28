@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { CheckCircle2, Clock, ExternalLink, RefreshCw, XCircle } from 'lucide-react'
 import { useCreatePayment, useOrder, useSyncPayment } from '../api/hooks'
@@ -16,6 +16,7 @@ export function Payment() {
   const createPayment = useCreatePayment()
   const syncPayment = useSyncPayment()
   const autoCreated = useRef(false)
+  const [syncNote, setSyncNote] = useState<string | null>(null)
 
   const pending = order?.status === 'PENDING_PAYMENT'
   const redirectUrl = order?.payment?.redirect_url ?? null
@@ -148,11 +149,17 @@ export function Payment() {
             <Button
               variant="ghost"
               className="w-full"
-              onClick={() => syncPayment.mutate(code)}
+              onClick={() => syncPayment.mutate(code, { onSuccess: (fresh) => setSyncNote(fresh.status) })}
               loading={syncPayment.isPending}
             >
               <RefreshCw className="h-4 w-4" /> Cek Status Pembayaran
             </Button>
+            {syncNote === 'PENDING_PAYMENT' && (
+              <Alert variant="info">
+                Belum ada pembayaran yang masuk untuk pesanan ini. Kalau Anda baru membayar,
+                tunggu 1–2 menit lalu cek lagi.
+              </Alert>
+            )}
             <Link
               to={`/orders/${order.code}`}
               className="block w-full pt-1 text-center text-sm font-semibold text-navy hover:underline"

@@ -65,10 +65,12 @@ class IpaymuWebhookService
             return;
         }
 
-        // paid_off = nominal yang dibayar pembeli pada callback iPaymu.
+        // paid_off = nominal yang dibayar pembeli pada callback iPaymu. Bisa
+        // lebih besar dari total order karena fee gateway (SubTotal + Fee),
+        // jadi yang ditolak hanya nominal yang kurang dari total.
         $amount = (int) ($payload['paid_off'] ?? $payload['amount'] ?? $payload['total'] ?? 0);
-        if ($amount !== (int) $order->total) {
-            Log::warning('Callback iPaymu: nominal tidak cocok', [
+        if ($amount > 0 && $amount < (int) $order->total) {
+            Log::warning('Callback iPaymu: nominal kurang dari total order', [
                 'order' => $order->code,
                 'expected' => $order->total,
                 'received' => $amount,
@@ -108,9 +110,7 @@ class IpaymuWebhookService
             return true;
         }
 
-        $status = (int) ($data['Status'] ?? 0);
-
-        return in_array($status, [1, 6], true);
+        return IpaymuStatus::isPaid($data);
     }
 
     /**
